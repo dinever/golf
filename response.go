@@ -1,6 +1,7 @@
 package Golf
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 )
@@ -8,9 +9,9 @@ import (
 // A wrapper of http.ResponseWriter
 type Response struct {
 	http.ResponseWriter
-	app *Application
-	Status int
-	Body []byte
+	app        *Application
+	StatusCode int
+	Body       []byte
 }
 
 func NewResponse(res http.ResponseWriter, app *Application) *Response {
@@ -22,13 +23,26 @@ func NewResponse(res http.ResponseWriter, app *Application) *Response {
 }
 
 func (res *Response) Send(str string) {
-  res.Body = []byte(str)
+	res.Body = []byte(str)
+}
+
+func (res *Response) JSON(obj interface{}) {
+	js, err := json.Marshal(obj)
+	if err != nil {
+		panic(err)
+	}
+	res.Body = js
+	res.Header().Set("Content-Type", "application/json")
+}
+
+func (res *Response) Status(code int) {
+	res.WriteHeader(code)
 }
 
 func (res *Response) Redirect(url string, code int) {
 	res.Header().Set("Location", url)
 	res.WriteHeader(code)
-	res.Status = code
+	res.StatusCode = code
 }
 
 func (res *Response) SetCookie(key string, value string, expire int) {
@@ -50,4 +64,13 @@ func (res *Response) Render(file_path string, arguments map[string]interface{}) 
 		panic(e)
 	}
 	res.Send(result)
+}
+
+// Sets the response’s HTTP header field to val.
+func (res *Response) Set(key, val string) {
+	res.Header().Set(key, val)
+}
+
+func (res *Response) Get(key string) string {
+	return res.Header().Get(key)
 }

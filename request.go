@@ -34,17 +34,26 @@ func (req *Request) Query(key string, index ...int) (string, error) {
 	}
 }
 
-// Cookie returns request cookie item string by a given key.
-func (req *Request) Cookie(key string) string {
-	cookie, err := req.Request.Cookie(key)
-	if err != nil {
-		return ""
+func (req *Request) Param(key string) (string, error) {
+	if val, ok := req.Params[key]; ok {
+		return val, nil
 	} else {
-		return cookie.Value
+		return "", errors.New("Parameter not found.")
 	}
+}
+
+// Cookie returns request cookie item string by a given key.
+func (req *Request) Cookie(key string) (*http.Cookie, error) {
+	cookie, err := req.Request.Cookie(key)
+	return cookie, err
 }
 
 // Protocol returns the request protocol string
 func (req *Request) Protocol() string {
 	return req.Proto
+}
+
+// Returns the form value by the given key.
+func (req *Request) FormValue(key string) string {
+	return req.Request.FormValue(key)
 }
