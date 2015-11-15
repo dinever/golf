@@ -45,6 +45,21 @@ func (router *Router) Get(pattern string, handler Handler) {
 	router.registerRoute(route, handler)
 }
 
+func (router *Router) Post(pattern string, handler Handler) {
+	route := newRoute(RouterMethodPost, pattern, handler)
+	router.registerRoute(route, handler)
+}
+
+func (router *Router) Put(pattern string, handler Handler) {
+	route := newRoute(RouterMethodPut, pattern, handler)
+	router.registerRoute(route, handler)
+}
+
+func (router *Router) Delete(pattern string, handler Handler) {
+	route := newRoute(RouterMethodDelete, pattern, handler)
+	router.registerRoute(route, handler)
+}
+
 func (router *Router) registerRoute(route *Route, handler Handler) {
 	router.routeSlice = append(router.routeSlice, route)
 }
