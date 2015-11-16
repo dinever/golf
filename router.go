@@ -64,6 +64,21 @@ func (router *Router) registerRoute(route *Route, handler Handler) {
 	router.routeSlice = append(router.routeSlice, route)
 }
 
+func (router *Router) match(url string, method int) (params map[string]string, handler Handler) {
+	params = make(map[string]string)
+	for _, route := range router.routeSlice {
+		if method == route.method && route.regex.MatchString(url) {
+			subMatch := route.regex.FindStringSubmatch(url)
+			for i, param := range route.params {
+				params[param] = subMatch[i + 1]
+			}
+			handler = route.handler
+			return
+		}
+	}
+	return nil, nil
+}
+
 func (route *Route) parseURL(pattern string) (regex *regexp.Regexp, params []string) {
 	params = make([]string, 0)
 	segments := strings.Split(pattern, "/")
