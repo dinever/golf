@@ -6,20 +6,20 @@ import (
 )
 
 const (
-	RouterMethodGet = 1
-	RouterMethodPost = 2
-	RouterMethodPut = 3
-	RouterMethodDelete = 4
+	RouterMethodGet = "GET"
+	RouterMethodPost = "POST"
+	RouterMethodPut = "PUT"
+	RouterMethodDelete = "DELET"
 )
 
 type Router struct {
 	routeSlice []*Route
 }
 
-type Handler func()
+type Handler func(req Request, res Response)
 
 type Route struct {
-	method int
+	method string
 	regex *regexp.Regexp
 	params []string
 	handler Handler
@@ -31,7 +31,7 @@ func NewRouter() *Router {
 	return router
 }
 
-func newRoute(method int, pattern string, handler Handler) *Route {
+func newRoute(method string, pattern string, handler Handler) *Route {
 	route := new(Route)
 	route.params = make([]string, 0)
 	route.regex, route.params = route.parseURL(pattern)
@@ -64,7 +64,7 @@ func (router *Router) registerRoute(route *Route, handler Handler) {
 	router.routeSlice = append(router.routeSlice, route)
 }
 
-func (router *Router) match(url string, method int) (params map[string]string, handler Handler) {
+func (router *Router) match(url string, method string) (params map[string]string, handler Handler) {
 	params = make(map[string]string)
 	for _, route := range router.routeSlice {
 		if method == route.method && route.regex.MatchString(url) {
