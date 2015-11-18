@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-func handler() {}
+func handler(req Request, res Response) {}
 
 func TestParsePatternWithOneParam(t *testing.T) {
 	cases := []struct {
