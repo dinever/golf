@@ -6,9 +6,8 @@ import (
 
 // A wrapper of http.Request
 type Request struct {
-  Request *http.Request
+  *http.Request
 	Params map[string]string
-	URL string
 }
 
 func NewRequest(req *http.Request) *Request {
