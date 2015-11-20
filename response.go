@@ -1,4 +1,4 @@
-package Yafg
+package Golf
 
 import (
   "net/http"
