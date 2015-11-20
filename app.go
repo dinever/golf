@@ -1,22 +1,42 @@
 package Yafg
 
 import (
+  "os"
+  "path"
   "net/http"
+  "strings"
 )
 
 type Application struct {
   router *Router
+  staticRouter map[string][]string
 }
 
 func New() *Application {
   app := new(Application)
   app.router = NewRouter()
+	app.staticRouter = make(map[string][]string)
   return app
 }
 
 func (app *Application) handler (res http.ResponseWriter, req *http.Request) {
   request := *NewRequest(req)
   response := *NewResponse(res)
+
+  for prefix, staticPathSlice := range app.staticRouter {
+    if (strings.HasPrefix(request.URL.Path, prefix)) {
+      for _, staticPath := range staticPathSlice {
+        filePath := path.Join(staticPath, request.URL.Path[len(prefix):])
+        _, err := os.Stat(filePath)
+        if (err == nil) {
+          staticHandler(request, response, filePath)
+          return
+        }
+      }
+      response.Send("404")
+    }
+  }
+
   var (
 		params  map[string]string
 		handler Handler
@@ -30,6 +50,10 @@ func (app *Application) handler (res http.ResponseWriter, req *http.Request) {
   }
 }
 
+func staticHandler(req Request, res Response, filePath string) {
+  http.ServeFile(res.ResponseWriter, req.Request, filePath)
+}
+
 func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	app.handler(res, req)
 }
@@ -37,6 +61,11 @@ func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 func (app *Application) Run(port string) {
   e := http.ListenAndServe(port, app)
 	panic(e)
+}
+
+func (app *Application) Static(url string, path string) {
+  url = strings.TrimRight(url, "/")
+  app.staticRouter[url] = append(app.staticRouter[url], path)
 }
 
 func (app *Application) Get(pattern string, handler Handler) {
