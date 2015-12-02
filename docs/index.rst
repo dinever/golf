@@ -1,4 +1,5 @@
 .. title:: Golf Web Server
+.. highlight:: go
 
 `Golf <http://github.com/dinever/golf>`_ is a Go web framework.
 
@@ -27,6 +28,16 @@ Here is a simple "Hello World!" application using Golf::
         app.Get("/", helloWorldHandler)
         app.Run(":5693")
     }
+
+
+Documentation
+-------------
+
+.. toctree::
+   :titlesonly:
+
+   request
+   response
 
 LICENSE
 -------
