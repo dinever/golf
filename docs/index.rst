@@ -5,6 +5,8 @@
 Installation
 ------------
 
+::
+
     go get github.com/dinever/golf
 
 Hello World

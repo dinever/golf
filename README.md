@@ -28,7 +28,7 @@ The website will be available at http://localhost:5693.
 
 ##Documents
 
-See [golf.readthedocs.org](http://crotal.org).
+See [golf.readthedocs.org](http://golf.readthedocs.org).
 
 ##License
 
