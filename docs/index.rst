@@ -1,6 +1,9 @@
 .. title:: Golf Web Server
 .. highlight:: go
 
+Golf
+====
+
 `Golf <http://github.com/dinever/golf>`_ is a Go web framework.
 
 Installation
