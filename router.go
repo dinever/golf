@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	RouterMethodGet = "GET"
-	RouterMethodPost = "POST"
-	RouterMethodPut = "PUT"
+	RouterMethodGet    = "GET"
+	RouterMethodPost   = "POST"
+	RouterMethodPut    = "PUT"
 	RouterMethodDelete = "DELET"
 )
 
@@ -19,9 +19,9 @@ type Router struct {
 type Handler func(req Request, res Response)
 
 type Route struct {
-	method string
-	regex *regexp.Regexp
-	params []string
+	method  string
+	regex   *regexp.Regexp
+	params  []string
 	handler Handler
 }
 
@@ -70,7 +70,7 @@ func (router *Router) match(url string, method string) (params map[string]string
 		if method == route.method && route.regex.MatchString(url) {
 			subMatch := route.regex.FindStringSubmatch(url)
 			for i, param := range route.params {
-				params[param] = subMatch[i + 1]
+				params[param] = subMatch[i+1]
 			}
 			handler = route.handler
 			return

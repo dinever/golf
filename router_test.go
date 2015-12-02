@@ -1,8 +1,8 @@
 package Golf
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func handler(req Request, res Response) {}
@@ -31,7 +31,7 @@ func TestParsePatternWithOneParam(t *testing.T) {
 func TestParsePatternWithThreeParam(t *testing.T) {
 	cases := []struct {
 		in, regex string
-		params []string
+		params    []string
 	}{
 		{
 			"/:year/:month/:day/",
@@ -55,8 +55,8 @@ func TestRouterMatch(t *testing.T) {
 	router := NewRouter()
 	cases := []struct {
 		pattern string
-		url string
-		params map[string]string
+		url     string
+		params  map[string]string
 	}{
 		{
 			"/:year/:month/:day/",
