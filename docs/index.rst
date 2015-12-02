@@ -10,6 +10,8 @@ Installation
 Hello World
 -----------
 
+Here is a simple "Hello World!" application using Golf::
+
     package main
 
     import "github.com/dinever/golf"
