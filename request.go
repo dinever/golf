@@ -1,6 +1,7 @@
 package Golf
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -19,11 +20,31 @@ func NewRequest(req *http.Request) *Request {
 	return request
 }
 
-func (req *Request) GetCookie(key string) string {
+// Query returns query data by the query key.
+func (req *Request) Query(key string, index ...int) (string, error) {
+	req.ParseForm()
+	if val, ok := req.Form[key]; ok {
+		if len(index) == 1 {
+			return val[index[0]], nil
+		} else {
+			return val[0], nil
+		}
+	} else {
+		return "", errors.New("Query key not found.")
+	}
+}
+
+// Cookie returns request cookie item string by a given key.
+func (req *Request) Cookie(key string) string {
 	cookie, err := req.Request.Cookie(key)
 	if err != nil {
 		return ""
 	} else {
 		return cookie.Value
 	}
+}
+
+// Protocol returns the request protocol string
+func (req *Request) Protocol() string {
+	return req.Proto
 }
