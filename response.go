@@ -8,11 +8,14 @@ import (
 // A wrapper of http.ResponseWriter
 type Response struct {
 	http.ResponseWriter
+	app *Application
 }
 
-func NewResponse(res http.ResponseWriter) *Response {
+func NewResponse(res http.ResponseWriter, app *Application) *Response {
 	response := new(Response)
 	response.ResponseWriter = res
+	response.app = app
+	response.Header().Set("Content-Type", "text/html;charset=UTF-8")
 	return response
 }
 
@@ -36,4 +39,12 @@ func (res *Response) SetCookie(key string, value string, expire int) {
 		Expires: expireTime,
 	}
 	http.SetCookie(res, cookie)
+}
+
+func (res *Response) Render(file_path string, arguments map[string]interface{}) {
+	result, e := res.app.view.Render(file_path, arguments)
+	if e != nil {
+		panic(e)
+	}
+	res.Send(result)
 }

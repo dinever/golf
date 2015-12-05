@@ -10,18 +10,20 @@ import (
 type Application struct {
 	router       *Router
 	staticRouter map[string][]string
+	view         *View
 }
 
 func New() *Application {
 	app := new(Application)
 	app.router = NewRouter()
 	app.staticRouter = make(map[string][]string)
+	app.view = NewView("")
 	return app
 }
 
 func (app *Application) handler(res http.ResponseWriter, req *http.Request) {
 	request := *NewRequest(req)
-	response := *NewResponse(res)
+	response := *NewResponse(res, app)
 
 	for prefix, staticPathSlice := range app.staticRouter {
 		if strings.HasPrefix(request.URL.Path, prefix) {
