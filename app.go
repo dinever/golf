@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 	"strings"
+	"log"
+	"fmt"
 )
 
 type Application struct {
@@ -39,6 +41,7 @@ func (app *Application) handler(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+
 	var (
 		params  map[string]string
 		handler Handler
@@ -46,10 +49,14 @@ func (app *Application) handler(res http.ResponseWriter, req *http.Request) {
 	params, handler = app.router.match(request.URL.Path, request.Method)
 	if params != nil && handler != nil {
 		request.Params = params
-		handler(request, response)
+    handler(&request, &response)
+		response.Status = 200
 	} else {
+		response.Status = 404
 		response.Send("404")
 	}
+  response.Write(response.Body)
+  log.Printf(fmt.Sprintf("\"GET %s %s %d\"", request.URL.Path, request.Protocol(), response.Status))
 }
 
 func staticHandler(req Request, res Response, filePath string) {

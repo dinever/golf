@@ -9,6 +9,8 @@ import (
 type Response struct {
 	http.ResponseWriter
 	app *Application
+	Status int
+	Body []byte
 }
 
 func NewResponse(res http.ResponseWriter, app *Application) *Response {
@@ -20,12 +22,13 @@ func NewResponse(res http.ResponseWriter, app *Application) *Response {
 }
 
 func (res *Response) Send(str string) {
-	res.Write([]byte(str))
+  res.Body = []byte(str)
 }
 
 func (res *Response) Redirect(url string, code int) {
 	res.Header().Set("Location", url)
 	res.WriteHeader(code)
+	res.Status = code
 }
 
 func (res *Response) SetCookie(key string, value string, expire int) {

@@ -16,7 +16,7 @@ type Router struct {
 	routeSlice []*Route
 }
 
-type Handler func(req Request, res Response)
+type Handler func(req *Request, res *Response)
 
 type Route struct {
 	method  string
