@@ -1,8 +1,10 @@
 # Golf
 
+[![Build Status](https://drone.io/github.com/dinever/golf/status.png)](https://drone.io/github.com/dinever/golf/latest)
+
 A web framework in Go.
 
-Homepage: [golf.readthedocs.org](http://crotal.org)
+Homepage: [golf.readthedocs.org](http://golf.readthedocs.org)
 
 ## Installation
 
