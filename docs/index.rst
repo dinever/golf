@@ -4,7 +4,7 @@
 Golf
 ====
 
-`Golf <http://github.com/dinever/golf>`_ is a Go web framework.
+`Golf <http://github.com/dinever/golf>`_ is a fast, simple and lightweight micro-web framework for Go. It comes with powerful features and has no dependencies other than the Go Standard Library.
 
 Installation
 ------------
@@ -22,14 +22,14 @@ Here is a simple "Hello World!" application using Golf::
 
     import "github.com/dinever/golf"
 
-    func helloWorldHandler(req Golf.Request, res Golf.Response) {
-        res.Send("Hello World!")
+    func helloWorldHandler(ctx *Golf.Context) {
+        ctx.Write("Hello World!")
     }
 
     func main() {
         app := Golf.New()
         app.Get("/", helloWorldHandler)
-        app.Run(":5693")
+        app.Run(":9000")
     }
 
 
@@ -39,8 +39,7 @@ Documentation
 .. toctree::
    :titlesonly:
 
-   request
-   response
+   quickstart
 
 LICENSE
 -------
