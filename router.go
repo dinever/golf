@@ -9,17 +9,19 @@ const (
 	RouterMethodGet    = "GET"
 	RouterMethodPost   = "POST"
 	RouterMethodPut    = "PUT"
-	RouterMethodDelete = "DELET"
+	RouterMethodDelete = "DELETE"
 )
 
 type Router struct {
 	routeSlice []*Route
 }
 
-type Handler func(req *Request, res *Response)
+type Handler func(ctx *Context)
+type ErrorHandler func(ctx *Context, e error)
 
 type Route struct {
 	method  string
+	pattern string
 	regex   *regexp.Regexp
 	params  []string
 	handler Handler
@@ -33,6 +35,7 @@ func NewRouter() *Router {
 
 func newRoute(method string, pattern string, handler Handler) *Route {
 	route := new(Route)
+	route.pattern = pattern
 	route.params = make([]string, 0)
 	route.regex, route.params = route.parseURL(pattern)
 	route.method = method
@@ -73,12 +76,13 @@ func (router *Router) match(url string, method string) (params map[string]string
 				params[param] = subMatch[i+1]
 			}
 			handler = route.handler
-			return
+			return params, handler
 		}
 	}
 	return nil, nil
 }
 
+// Parse the URL to a regexp and a map of parameters
 func (route *Route) parseURL(pattern string) (regex *regexp.Regexp, params []string) {
 	params = make([]string, 0)
 	segments := strings.Split(pattern, "/")

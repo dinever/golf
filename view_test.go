@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestRenderFromString(t *testing.T) {
+func TestStringRendering(t *testing.T) {
 	cases := []struct {
 		content string
 		args    map[string]interface{}
@@ -33,8 +33,8 @@ func TestRenderFromString(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		view := NewView(".")
-		result, error := view.RenderFromString(c.content, c.args)
+		view := NewView()
+		result, error := view.RenderFromString("", c.content, c.args)
 		if error != nil {
 			panic(error)
 		}

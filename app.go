@@ -1,95 +1,128 @@
 package Golf
 
 import (
-	"net/http"
 	"os"
 	"path"
 	"strings"
+	"net/http"
 )
 
 type Application struct {
-	router       *Router
+	router *Router
+
+	// A map of string slices as value to indicate the static files.
 	staticRouter map[string][]string
-	view         *View
-	Config       *Config
+
+	View *View
+
+	// Config provides configuration management.
+	Config *Config
+
+	// NotFoundHandler handles requests when no route is matched.
+	NotFoundHandler Handler
+
+	// MiddlewareChain is the default middlewares that Golf uses.
+	MiddlewareChain *Chain
+
+	errorHandler map[int]Handler
+
+	DefaultErrorHandler Handler
 }
 
 func New() *Application {
 	app := new(Application)
 	app.router = NewRouter()
 	app.staticRouter = make(map[string][]string)
-	app.view = NewView("")
+	app.View = NewView()
 	app.Config = NewConfig(app)
+	// debug, _ := app.Config.GetBool("debug", false)
+	app.errorHandler = make(map[int]Handler)
+	app.MiddlewareChain = NewChain(DefaultMiddlewares...)
+	app.DefaultErrorHandler = defaultErrorHandler
 	return app
 }
 
-func (app *Application) handler(req *Request, res *Response) {
+// First search if any of the static route matches the request.
+// If not, look up the URL in the router.
+func (app *Application) handler(ctx *Context) {
 	for prefix, staticPathSlice := range app.staticRouter {
-		if strings.HasPrefix(req.URL.Path, prefix) {
+		if strings.HasPrefix(ctx.Request.URL.Path, prefix) {
 			for _, staticPath := range staticPathSlice {
-				filePath := path.Join(staticPath, req.URL.Path[len(prefix):])
+				filePath := path.Join(staticPath, ctx.Request.URL.Path[len(prefix):])
 				_, err := os.Stat(filePath)
 				if err == nil {
-					staticHandler(req, res, filePath)
+					staticHandler(ctx, filePath)
 					return
 				}
 			}
 		}
-		notFoundHandler(req, res)
 	}
 
-	var (
-		params  map[string]string
-		handler Handler
-	)
-	params, handler = app.router.match(req.URL.Path, req.Method)
-	if params != nil && handler != nil {
-		res.StatusCode = 200
-		req.Params = params
-		handler(req, res)
+	params, handler := app.router.match(ctx.Request.URL.Path, ctx.Request.Method)
+	if handler != nil {
+		ctx.Params = params
+		handler(ctx)
 	} else {
-		notFoundHandler(req, res)
+		app.handleError(ctx, 404)
 	}
-	res.Write(res.Body)
+	ctx.Send()
 }
 
-func notFoundHandler(req *Request, res *Response) {
-	res.StatusCode = 404
-	res.Send("404")
-}
-
-func staticHandler(req *Request, res *Response, filePath string) {
-	http.ServeFile(res.ResponseWriter, req.Request, filePath)
+// Serve a static file
+func staticHandler(ctx *Context, filePath string) {
+	http.ServeFile(ctx.Response, ctx.Request, filePath)
 }
 
 func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	request := NewRequest(req)
-	response := NewResponse(res, app)
-	chain.Final(app.handler)(request, response)
+	ctx := NewContext(req, res, app)
+	app.MiddlewareChain.Final(app.handler)(ctx)
 }
 
-func (app *Application) Run(port string) {
-	e := http.ListenAndServe(port, app)
-	panic(e)
+func (app *Application) Run(addr string) {
+	err := http.ListenAndServe(addr, app)
+	if err != nil {
+		panic(err)
+	}
 }
 
+// Register a static folder
 func (app *Application) Static(url string, path string) {
 	url = strings.TrimRight(url, "/")
 	app.staticRouter[url] = append(app.staticRouter[url], path)
 }
 
+// Register a Get method route
 func (app *Application) Get(pattern string, handler Handler) {
 	app.router.Get(pattern, handler)
 }
 
+// Register a Post method route
 func (app *Application) Post(pattern string, handler Handler) {
 	app.router.Post(pattern, handler)
 }
 
+// Register a Put method route
 func (app *Application) Put(pattern string, handler Handler) {
 	app.router.Put(pattern, handler)
 }
 
+// Register a Delete method route
 func (app *Application) Delete(pattern string, handler Handler) {
 	app.router.Delete(pattern, handler)
+}
+
+func (app *Application) Error(statusCode int, handler Handler) {
+	app.errorHandler[statusCode] = handler
+}
+
+// Handles a HTTP Error, if there is a corresponding handler set in the map
+// `errorHandler`, then call it. Otherwise call the `defaultErrorHandler`.
+func (app *Application) handleError(ctx *Context, statusCode int) {
+	ctx.StatusCode = statusCode
+	handler, ok := app.errorHandler[ctx.StatusCode]
+	if !ok {
+		defaultErrorHandler(ctx)
+		return
+	}
+	handler(ctx)
 }

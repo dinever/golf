@@ -14,17 +14,17 @@ Homepage: [golf.readthedocs.org](http://crotal.org)
 
     import "github.com/dinever/golf"
 
-    func helloWorldHandler(req Golf.Request, res Golf.Response) {
-        res.Send("Hello World!")
+    func helloWorldHandler(ctx *Golf.Context) {
+        ctx.Write("Hello World!")
     }
 
     func main() {
         app := Golf.New()
         app.Get("/", helloWorldHandler)
-        app.Run(":5693")
+        app.Run(":9000")
     }
 
-The website will be available at http://localhost:5693.
+The website will be available at http://localhost:9000.
 
 ##Documents
 

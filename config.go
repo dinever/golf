@@ -25,16 +25,18 @@ func (err *ValueTypeError) Error() string {
 	return fmt.Sprintf("%s, key: %s, value: %v (%s)", err.message, err.key, err.value, reflect.TypeOf(err.value).Name())
 }
 
+// Config control for the application.
 type Config struct {
-	app     *Application
 	mapping map[string]interface{}
 }
 
 func NewConfig(app *Application) *Config {
 	mapping := make(map[string]interface{})
-	return &Config{app, mapping}
+	return &Config{mapping}
 }
 
+// GetString fetches the string value by indicating the key.
+// It returns a ValueTypeError if the value is not a sring.
 func (config *Config) GetString(key string, defaultValue interface{}) (string, error) {
 	value, err := config.Get(key, defaultValue)
 	if err != nil {
@@ -47,6 +49,8 @@ func (config *Config) GetString(key string, defaultValue interface{}) (string, e
 	}
 }
 
+// GetInt feteches the int value by indicating the key.
+// It returns a ValueTypeError if the value is not a sring.
 func (config *Config) GetInt(key string, defaultValue interface{}) (int, error) {
 	value, err := config.Get(key, defaultValue)
 	if err != nil {
@@ -59,6 +63,8 @@ func (config *Config) GetInt(key string, defaultValue interface{}) (int, error) 
 	}
 }
 
+// GetBool feteches the bool value by indicating the key.
+// It returns a ValueTypeError if the value is not a sring.
 func (config *Config) GetBool(key string, defaultValue interface{}) (bool, error) {
 	value, err := config.Get(key, defaultValue)
 	if err != nil {
@@ -71,6 +77,8 @@ func (config *Config) GetBool(key string, defaultValue interface{}) (bool, error
 	}
 }
 
+// GetFloat feteches the float value by indicating the key.
+// It returns a ValueTypeError if the value is not a sring.
 func (config *Config) GetFloat(key string, defaultValue interface{}) (float64, error) {
 	value, err := config.Get(key, defaultValue)
 	if err != nil {
@@ -83,6 +91,11 @@ func (config *Config) GetFloat(key string, defaultValue interface{}) (float64, e
 	}
 }
 
+// Set is used to set the value by indicating the key.
+// If you want to set multi-level json, key can be like 'foo/bar'.
+// For instance, `Set("foo/bar", 4)` and `Set("foo/bar2", "foo")`.
+// If the parent key is not a map, then return a KeyError.
+// For instance, can not set ("foo/bar", 4) after setting ("foo", 5).
 func (config *Config) Set(key string, value interface{}) error {
 	var tmp interface{}
 	keys := strings.Split(key, "/")
@@ -92,31 +105,35 @@ func (config *Config) Set(key string, value interface{}) error {
 			continue
 		}
 		if mapping, ok := tmp.(map[string]interface{}); ok {
-			if i == len(keys) - 1 {
+			if i == len(keys)-1 {
 				mapping[item] = value
 				return nil
 			} else {
 				if value, exists := mapping[item]; exists {
-          switch t := value.(type) {
-          case map[string]interface{}:
-            tmp = value
-          default:
-            _ = t
-		        mapping[item] = make(map[string]interface{})
-					  tmp = mapping[item]
-          }
+					switch t := value.(type) {
+					case map[string]interface{}:
+						tmp = value
+					default:
+						_ = t
+						mapping[item] = make(map[string]interface{})
+						tmp = mapping[item]
+					}
 				} else {
 					mapping[item] = make(map[string]interface{})
 					tmp = mapping[item]
 				}
 			}
 		} else {
-		    return &KeyError{key: path.Join(append(keys[:i], item)...)}
-    }
+			return &KeyError{key: path.Join(append(keys[:i], item)...)}
+		}
 	}
-  return nil
+	return nil
 }
 
+// Get is used to retrieve the value by indicating a key.
+// After calling this method you should indicate the type of the return value.
+// If one of the parent node is not a map, then return a ValueTypeError.
+// If the key is not found, return a KeyError.
 func (config *Config) Get(key string, defaultValue interface{}) (interface{}, error) {
 	var (
 		tmp interface{}

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func handler(req *Request, res *Response) {}
+func handler(ctx *Context) {}
 
 func TestParsePatternWithOneParam(t *testing.T) {
 	cases := []struct {
