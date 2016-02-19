@@ -49,7 +49,7 @@ func (config *Config) GetString(key string, defaultValue interface{}) (string, e
 	}
 }
 
-// GetInt feteches the int value by indicating the key.
+// GetInt fetches the int value by indicating the key.
 // It returns a ValueTypeError if the value is not a sring.
 func (config *Config) GetInt(key string, defaultValue interface{}) (int, error) {
 	value, err := config.Get(key, defaultValue)
@@ -63,7 +63,7 @@ func (config *Config) GetInt(key string, defaultValue interface{}) (int, error) 
 	}
 }
 
-// GetBool feteches the bool value by indicating the key.
+// GetBool fetches the bool value by indicating the key.
 // It returns a ValueTypeError if the value is not a sring.
 func (config *Config) GetBool(key string, defaultValue interface{}) (bool, error) {
 	value, err := config.Get(key, defaultValue)
@@ -77,7 +77,7 @@ func (config *Config) GetBool(key string, defaultValue interface{}) (bool, error
 	}
 }
 
-// GetFloat feteches the float value by indicating the key.
+// GetFloat fetches the float value by indicating the key.
 // It returns a ValueTypeError if the value is not a sring.
 func (config *Config) GetFloat(key string, defaultValue interface{}) (float64, error) {
 	value, err := config.Get(key, defaultValue)
