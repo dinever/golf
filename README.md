@@ -12,19 +12,21 @@ Homepage: [golf.readthedocs.org](http://golf.readthedocs.org)
 
 ## Hello World
 
-    package main
+```go
+package main
 
-    import "github.com/dinever/golf"
+import "github.com/dinever/golf"
 
-    func helloWorldHandler(ctx *Golf.Context) {
-        ctx.Write("Hello World!")
-    }
+func helloWorldHandler(ctx *Golf.Context) {
+  ctx.Write("Hello World!")
+}
 
-    func main() {
-        app := Golf.New()
-        app.Get("/", helloWorldHandler)
-        app.Run(":9000")
-    }
+func main() {
+  app := Golf.New()
+  app.Get("/", helloWorldHandler)
+  app.Run(":9000")
+}
+```
 
 The website will be available at http://localhost:9000.
 
