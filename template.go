@@ -1,13 +1,13 @@
 package Golf
 
 import (
-	"io"
-	"os"
 	"fmt"
+	"html/template"
+	"io"
+	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
-	"io/ioutil"
-	"html/template"
 )
 
 // Regular Expressions to find out the extension syntax.

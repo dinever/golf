@@ -1,10 +1,10 @@
 package Golf
 
 import (
+	"net/http"
 	"os"
 	"path"
 	"strings"
-	"net/http"
 )
 
 // The Golf Application, used for configuration, etc.
@@ -56,7 +56,7 @@ func (app *Application) handler(ctx *Context) {
 			for _, staticPath := range staticPathSlice {
 				filePath := path.Join(staticPath, ctx.Request.URL.Path[len(prefix):])
 				fileInfo, err := os.Stat(filePath)
-				if err == nil && !fileInfo.IsDir(){
+				if err == nil && !fileInfo.IsDir() {
 					staticHandler(ctx, filePath)
 					return
 				}
