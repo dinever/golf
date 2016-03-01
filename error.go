@@ -72,6 +72,7 @@ func (e *templateError) Error() string {
 	return fmt.Sprintf(e.Format, e.Parameters...)
 }
 
+// Errf returns an templateError.
 func Errf(format string, parameters ...interface{}) error {
 	return &templateError{
 		Format:     format,

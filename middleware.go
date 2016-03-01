@@ -10,18 +10,19 @@ type middlewareHandler func(next Handler) Handler
 
 var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware}
 
-// A chain of middlewares.
+// Chain contains a sequence of middlewares.
 type Chain struct {
 	middlewareHandlers []middlewareHandler
 }
 
+// NewChain Creates a new middleware chain.
 func NewChain(handlerArray ...middlewareHandler) *Chain {
 	c := new(Chain)
 	c.middlewareHandlers = handlerArray
 	return c
 }
 
-// Indicating a final Handler, chain the multiple middlewares together with the
+// Final indicates a final Handler, chain the multiple middlewares together with the
 // handler, and return them together as a handler.
 func (c Chain) Final(fn Handler) Handler {
 	final := fn
@@ -36,6 +37,7 @@ func (c *Chain) Append(fn middlewareHandler) {
 	c.middlewareHandlers = append(c.middlewareHandlers, fn)
 }
 
+// LoggingMiddleware is the built-in middleware for logging.
 func LoggingMiddleware(next Handler) Handler {
 	fn := func(ctx *Context) {
 		t1 := time.Now()
@@ -46,6 +48,7 @@ func LoggingMiddleware(next Handler) Handler {
 	return fn
 }
 
+// RecoverMiddleware is the built-in middleware for recovering from errors.
 func RecoverMiddleware(next Handler) Handler {
 	fn := func(ctx *Context) {
 		defer func() {
@@ -65,6 +68,5 @@ func RecoverMiddleware(next Handler) Handler {
 		}()
 		next(ctx)
 	}
-
 	return fn
 }
