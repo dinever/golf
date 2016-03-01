@@ -7,12 +7,15 @@ import (
 	"net/http"
 )
 
+// The Golf Application, used for configuration, etc.
 type Application struct {
 	router *Router
 
 	// A map of string slices as value to indicate the static files.
 	staticRouter map[string][]string
 
+	// The View model of the application. View handles the templating and page
+	// rendering.
 	View *View
 
 	// Config provides configuration management.
@@ -26,9 +29,12 @@ type Application struct {
 
 	errorHandler map[int]Handler
 
+	// The default error handler, if the corresponding error code is not specified
+	// in the `errorHandler` map, this handler will be called.
 	DefaultErrorHandler Handler
 }
 
+// Create a new Golf Application instance.
 func New() *Application {
 	app := new(Application)
 	app.router = NewRouter()
@@ -73,11 +79,13 @@ func staticHandler(ctx *Context, filePath string) {
 	http.ServeFile(ctx.Response, ctx.Request, filePath)
 }
 
+// Basic entrance of an `http.ResponseWriter` and an `http.Request`.
 func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	ctx := NewContext(req, res, app)
 	app.MiddlewareChain.Final(app.handler)(ctx)
 }
 
+// Run the Golf Application.
 func (app *Application) Run(addr string) {
 	err := http.ListenAndServe(addr, app)
 	if err != nil {
