@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Context is a wrapper of http.Request and http.ResponseWriter.
 type Context struct {
 	// http.Request
 	Request *http.Request
@@ -39,6 +40,7 @@ type Context struct {
 	templateLoader string
 }
 
+// NewContext creates a Golf.Context instance.
 func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *Context {
 	ctx := new(Context)
 	ctx.Request = req
@@ -53,37 +55,34 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 	return ctx
 }
 
-// Retrieving the form data, return empty string if not found.
+// Query method retrieves the form data, return empty string if not found.
 func (ctx *Context) Query(key string, index ...int) (string, error) {
 	if val, ok := ctx.Request.Form[key]; ok {
 		if len(index) == 1 {
 			return val[index[0]], nil
-		} else {
-			return val[0], nil
 		}
-	} else {
-		return "", errors.New("Query key not found.")
+		return val[0], nil
 	}
+	return "", errors.New("Query key not found.")
 }
 
-// Retrieving the parameters from url
+// Param method retrieves the parameters from url
 // If the url is /:id/, then id can be retrieved by calling `ctx.Param(id)`
 func (ctx *Context) Param(key string) (string, error) {
 	if val, ok := ctx.Params[key]; ok {
 		return val, nil
-	} else {
-		return "", errors.New("Parameter not found.")
 	}
+	return "", errors.New("Parameter not found.")
 }
 
-// Make a 301 redirection
-// If you want a 302 redirection, please do it by setting the Header
+// Redirect method sets the response as a 301 redirection.
+// If you need a 302 redirection, please do it by setting the Header manually.
 func (ctx *Context) Redirect(url string) {
 	ctx.Header["Location"] = url
 	ctx.StatusCode = 301
 }
 
-// Set Cookie for the request. If expire is 0, create a session cookie.
+// SetCookie set cookies for the request. If expire is 0, create a session cookie.
 func (ctx *Context) SetCookie(key string, value string, expire int) {
 	now := time.Now()
 	cookie := &http.Cookie{
@@ -99,7 +98,7 @@ func (ctx *Context) SetCookie(key string, value string, expire int) {
 	http.SetCookie(ctx.Response, cookie)
 }
 
-// Sends a JSON response.
+// JSON Sends a JSON response.
 func (ctx *Context) JSON(obj interface{}) {
 	json, err := json.Marshal(obj)
 	if err != nil {
@@ -128,7 +127,7 @@ func (ctx *Context) Write(content string) {
 	ctx.Body = []byte(content)
 }
 
-// Returns an HTTP Error by indicating the status code, the corresponding
+// Abort method returns an HTTP Error by indicating the status code, the corresponding
 // handler inside `App.errorHandler` will be called, if user does not set
 // the corresponding error handler, the defaultErrorHandler will be called.
 func (ctx *Context) Abort(statusCode int) {
@@ -136,7 +135,7 @@ func (ctx *Context) Abort(statusCode int) {
 	ctx.App.handleError(ctx, statusCode)
 }
 
-// Set the template loader for this context. This should be done before calling
+// Loader method sets the template loader for this context. This should be done before calling
 // `ctx.Render`.
 func (ctx *Context) Loader(name string) *Context {
 	ctx.templateLoader = name
@@ -152,6 +151,7 @@ func (ctx *Context) Render(file string, data interface{}) {
 	ctx.Body = []byte(content)
 }
 
+// RenderFromString renders a input string.
 func (ctx *Context) RenderFromString(tplSrc string, data interface{}) {
 	content, e := ctx.App.View.RenderFromString(ctx.templateLoader, tplSrc, data)
 	if e != nil {
