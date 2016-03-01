@@ -49,9 +49,8 @@ func (config *Config) GetString(key string, defaultValue interface{}) (string, e
 	}
 	if result, ok := value.(string); ok {
 		return result, nil
-	} else {
-		return "", &ValueTypeError{key: key, value: value, message: "Value is not a string."}
 	}
+	return "", &ValueTypeError{key: key, value: value, message: "Value is not a string."}
 }
 
 // GetInt fetches the int value by indicating the key.
@@ -63,9 +62,8 @@ func (config *Config) GetInt(key string, defaultValue interface{}) (int, error) 
 	}
 	if result, ok := value.(int); ok {
 		return result, nil
-	} else {
-		return 0, &ValueTypeError{key: key, value: value, message: "Value is not an integer."}
 	}
+	return 0, &ValueTypeError{key: key, value: value, message: "Value is not an integer."}
 }
 
 // GetBool fetches the bool value by indicating the key.
@@ -77,9 +75,8 @@ func (config *Config) GetBool(key string, defaultValue interface{}) (bool, error
 	}
 	if result, ok := value.(bool); ok {
 		return result, nil
-	} else {
-		return false, &ValueTypeError{key: key, value: value, message: "Value is not an bool."}
 	}
+	return false, &ValueTypeError{key: key, value: value, message: "Value is not an bool."}
 }
 
 // GetFloat fetches the float value by indicating the key.
@@ -91,9 +88,8 @@ func (config *Config) GetFloat(key string, defaultValue interface{}) (float64, e
 	}
 	if result, ok := value.(float64); ok {
 		return result, nil
-	} else {
-		return 0, &ValueTypeError{key: key, value: value, message: "Value is not a float."}
 	}
+	return 0, &ValueTypeError{key: key, value: value, message: "Value is not a float."}
 }
 
 // Set is used to set the value by indicating the key.
@@ -113,20 +109,19 @@ func (config *Config) Set(key string, value interface{}) error {
 			if i == len(keys)-1 {
 				mapping[item] = value
 				return nil
-			} else {
-				if value, exists := mapping[item]; exists {
-					switch t := value.(type) {
-					case map[string]interface{}:
-						tmp = value
-					default:
-						_ = t
-						mapping[item] = make(map[string]interface{})
-						tmp = mapping[item]
-					}
-				} else {
+			}
+			if value, exists := mapping[item]; exists {
+				switch t := value.(type) {
+				case map[string]interface{}:
+					tmp = value
+				default:
+					_ = t
 					mapping[item] = make(map[string]interface{})
 					tmp = mapping[item]
 				}
+			} else {
+				mapping[item] = make(map[string]interface{})
+				tmp = mapping[item]
 			}
 		} else {
 			return &KeyError{key: path.Join(append(keys[:i], item)...)}
