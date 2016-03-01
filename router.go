@@ -6,20 +6,20 @@ import (
 )
 
 const (
-	RouterMethodGet    = "GET"
-	RouterMethodPost   = "POST"
-	RouterMethodPut    = "PUT"
-	RouterMethodDelete = "DELETE"
+	routerMethodGet    = "GET"
+	routerMethodPost   = "POST"
+	routerMethodPut    = "PUT"
+	routerMethodDelete = "DELETE"
 )
 
-type Router struct {
-	routeSlice []*Route
+type router struct {
+	routeSlice []*route
 }
 
 type Handler func(ctx *Context)
 type ErrorHandler func(ctx *Context, e error)
 
-type Route struct {
+type route struct {
 	method  string
 	pattern string
 	regex   *regexp.Regexp
@@ -27,14 +27,14 @@ type Route struct {
 	handler Handler
 }
 
-func NewRouter() *Router {
-	router := new(Router)
-	router.routeSlice = make([]*Route, 0)
-	return router
+func newRouter() *router {
+	r := new(router)
+	r.routeSlice = make([]*route, 0)
+	return r
 }
 
-func newRoute(method string, pattern string, handler Handler) *Route {
-	route := new(Route)
+func newRoute(method string, pattern string, handler Handler) *route {
+	route := new(route)
 	route.pattern = pattern
 	route.params = make([]string, 0)
 	route.regex, route.params = route.parseURL(pattern)
@@ -43,31 +43,31 @@ func newRoute(method string, pattern string, handler Handler) *Route {
 	return route
 }
 
-func (router *Router) Get(pattern string, handler Handler) {
-	route := newRoute(RouterMethodGet, pattern, handler)
+func (router *router) get(pattern string, handler Handler) {
+	route := newRoute(routerMethodGet, pattern, handler)
 	router.registerRoute(route, handler)
 }
 
-func (router *Router) Post(pattern string, handler Handler) {
-	route := newRoute(RouterMethodPost, pattern, handler)
+func (router *router) post(pattern string, handler Handler) {
+	route := newRoute(routerMethodPost, pattern, handler)
 	router.registerRoute(route, handler)
 }
 
-func (router *Router) Put(pattern string, handler Handler) {
-	route := newRoute(RouterMethodPut, pattern, handler)
+func (router *router) put(pattern string, handler Handler) {
+	route := newRoute(routerMethodPut, pattern, handler)
 	router.registerRoute(route, handler)
 }
 
-func (router *Router) Delete(pattern string, handler Handler) {
-	route := newRoute(RouterMethodDelete, pattern, handler)
+func (router *router) delete(pattern string, handler Handler) {
+	route := newRoute(routerMethodDelete, pattern, handler)
 	router.registerRoute(route, handler)
 }
 
-func (router *Router) registerRoute(route *Route, handler Handler) {
+func (router *router) registerRoute(route *route, handler Handler) {
 	router.routeSlice = append(router.routeSlice, route)
 }
 
-func (router *Router) match(url string, method string) (params map[string]string, handler Handler) {
+func (router *router) match(url string, method string) (params map[string]string, handler Handler) {
 	params = make(map[string]string)
 	for _, route := range router.routeSlice {
 		if method == route.method && route.regex.MatchString(url) {
@@ -83,7 +83,7 @@ func (router *Router) match(url string, method string) (params map[string]string
 }
 
 // Parse the URL to a regexp and a map of parameters
-func (route *Route) parseURL(pattern string) (regex *regexp.Regexp, params []string) {
+func (route *route) parseURL(pattern string) (regex *regexp.Regexp, params []string) {
 	params = make([]string, 0)
 	segments := strings.Split(pattern, "/")
 	for i, segment := range segments {

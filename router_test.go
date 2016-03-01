@@ -15,7 +15,7 @@ func TestParsePatternWithOneParam(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		route := newRoute(RouterMethodGet, c.in, handler)
+		route := newRoute(routerMethodGet, c.in, handler)
 		if route.regex.String() != c.regex {
 			t.Errorf("regex of %q  == %q, want %q", c.in, route.regex.String(), c.regex)
 		}
@@ -41,7 +41,7 @@ func TestParsePatternWithThreeParam(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		route := newRoute(RouterMethodGet, c.in, handler)
+		route := newRoute(routerMethodGet, c.in, handler)
 		if route.regex.String() != c.regex {
 			t.Errorf("regex == %q, want %q", c.in, route.regex.String())
 		}
@@ -52,7 +52,7 @@ func TestParsePatternWithThreeParam(t *testing.T) {
 }
 
 func TestRouterMatch(t *testing.T) {
-	router := NewRouter()
+	router := newRouter()
 	cases := []struct {
 		pattern string
 		url     string
@@ -70,8 +70,8 @@ func TestRouterMatch(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		router.Get(c.pattern, handler)
-		params, _ := router.match(c.url, RouterMethodGet)
+		router.get(c.pattern, handler)
+		params, _ := router.match(c.url, routerMethodGet)
 		if !reflect.DeepEqual(params, c.params) {
 			t.Errorf("parameters not match: %v != %v", params, c.params)
 		}
