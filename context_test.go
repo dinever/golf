@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func makeTestHttpRequest(body io.Reader) *http.Request {
+func makeTestHTTPRequest(body io.Reader) *http.Request {
 	req, err := http.NewRequest("GET", "/foo/bar", body)
 	if err != nil {
 		return nil
