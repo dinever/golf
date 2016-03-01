@@ -49,8 +49,8 @@ func (app *Application) handler(ctx *Context) {
 		if strings.HasPrefix(ctx.Request.URL.Path, prefix) {
 			for _, staticPath := range staticPathSlice {
 				filePath := path.Join(staticPath, ctx.Request.URL.Path[len(prefix):])
-				_, err := os.Stat(filePath)
-				if err == nil {
+				fileInfo, err := os.Stat(filePath)
+				if err == nil && !fileInfo.IsDir(){
 					staticHandler(ctx, filePath)
 					return
 				}
