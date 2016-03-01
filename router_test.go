@@ -43,7 +43,7 @@ func TestParsePatternWithThreeParam(t *testing.T) {
 	for _, c := range cases {
 		route := newRoute(RouterMethodGet, c.in, handler)
 		if route.regex.String() != c.regex {
-			t.Errorf("regex == %q, want %q", c.in, route.regex.String(), c.regex)
+			t.Errorf("regex == %q, want %q", c.in, route.regex.String())
 		}
 		if !reflect.DeepEqual(route.params, c.params) {
 			t.Errorf("parameters not match: %v != %v", route.params, c.params)
