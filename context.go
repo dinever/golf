@@ -128,7 +128,7 @@ func (ctx *Context) Write(content string) {
 }
 
 // Abort method returns an HTTP Error by indicating the status code, the corresponding
-// handler inside `App.errorHandler` will be called, if user does not set
+// handler inside `App.errorHandler` will be called, if user has not set
 // the corresponding error handler, the defaultErrorHandler will be called.
 func (ctx *Context) Abort(statusCode int) {
 	ctx.StatusCode = statusCode

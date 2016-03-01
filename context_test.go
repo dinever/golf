@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -76,5 +77,50 @@ func TestRedirection(t *testing.T) {
 	ctx.Send()
 	if w.HeaderMap.Get("Location") != `/foo` {
 		t.Errorf("Can not perform a 301 redirection.")
+	}
+}
+
+func TestWrite(t *testing.T) {
+	ctx := makeNewContext("GET", "/foo")
+	ctx.Write("hello world")
+	if !reflect.DeepEqual(ctx.Body, []byte("hello world")) {
+		t.Errorf("Context.Write failed.")
+	}
+}
+
+func TestAbort(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	ctx.Abort(500)
+	if w.Code != 500 || !ctx.IsSent {
+		t.Errorf("Can not abort a context.")
+	}
+}
+
+func TestRenderFromString(t *testing.T) {
+	cases := []struct {
+		src    string
+		args   map[string]interface{}
+		output string
+	}{
+		{
+			"foo {{.Title}} bar",
+			map[string]interface{}{"Title": "Hello World"},
+			"foo Hello World bar",
+		},
+	}
+
+	for _, c := range cases {
+		r := makeTestHTTPRequest(nil, "GET", "/")
+		w := httptest.NewRecorder()
+		app := New()
+		ctx := NewContext(r, w, app)
+		ctx.RenderFromString(c.src, c.args)
+		ctx.Send()
+		if w.Body.String() != c.output {
+			t.Errorf("Can not render from string correctly. %v != %v", w.Body.String(), c.output)
+		}
 	}
 }
