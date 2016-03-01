@@ -7,7 +7,8 @@ import (
 	"strings"
 )
 
-// The Golf Application, used for configuration, etc.
+// Application is an abstraction of a Golf application, can be used for
+// configuration, etc.
 type Application struct {
 	router *Router
 
@@ -34,7 +35,7 @@ type Application struct {
 	DefaultErrorHandler Handler
 }
 
-// Create a new Golf Application instance.
+// New is used for creating a new Golf Application instance.
 func New() *Application {
 	app := new(Application)
 	app.router = NewRouter()
@@ -93,32 +94,33 @@ func (app *Application) Run(addr string) {
 	}
 }
 
-// Register a static folder
+// Static is used for registering a static folder
 func (app *Application) Static(url string, path string) {
 	url = strings.TrimRight(url, "/")
 	app.staticRouter[url] = append(app.staticRouter[url], path)
 }
 
-// Register a Get method route
+// Get method is used for registering a Get method route
 func (app *Application) Get(pattern string, handler Handler) {
 	app.router.Get(pattern, handler)
 }
 
-// Register a Post method route
+// Post method is used for registering a Post method route
 func (app *Application) Post(pattern string, handler Handler) {
 	app.router.Post(pattern, handler)
 }
 
-// Register a Put method route
+// Put method is used for registering a Put method route
 func (app *Application) Put(pattern string, handler Handler) {
 	app.router.Put(pattern, handler)
 }
 
-// Register a Delete method route
+// Delete method is used for registering a Delete method route
 func (app *Application) Delete(pattern string, handler Handler) {
 	app.router.Delete(pattern, handler)
 }
 
+// Error method is used for registering an handler for a specified HTTP error code.
 func (app *Application) Error(statusCode int, handler Handler) {
 	app.errorHandler[statusCode] = handler
 }

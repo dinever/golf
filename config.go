@@ -7,20 +7,24 @@ import (
 	"strings"
 )
 
+// KeyError is thrown when the specified key is not found in the configuration.
 type KeyError struct {
 	key string
 }
 
+// Error method implements Error method of Go standard library "error".
 func (err *KeyError) Error() string {
 	return fmt.Sprintf("Key not found, key: %s", err.key)
 }
 
+// ValueTypeError is thrown when the type of the specified value is not valid.
 type ValueTypeError struct {
 	key     string
 	value   interface{}
 	message string
 }
 
+// Error method implements Error method of Go standard library "error".
 func (err *ValueTypeError) Error() string {
 	return fmt.Sprintf("%s, key: %s, value: %v (%s)", err.message, err.key, err.value, reflect.TypeOf(err.value).Name())
 }
@@ -30,6 +34,7 @@ type Config struct {
 	mapping map[string]interface{}
 }
 
+// NewConfig creates a new configuration instance.
 func NewConfig(app *Application) *Config {
 	mapping := make(map[string]interface{})
 	return &Config{mapping}
