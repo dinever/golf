@@ -128,7 +128,7 @@ func (ctx *Context) Write(content string) {
 	ctx.Body = []byte(content)
 }
 
-// Retuns an HTTP Error by indicating the status code, the corresponding
+// Returns an HTTP Error by indicating the status code, the corresponding
 // handler inside `App.errorHandler` will be called, if user does not set
 // the corresponding error handler, the defaultErrorHandler will be called.
 func (ctx *Context) Abort(statusCode int) {
