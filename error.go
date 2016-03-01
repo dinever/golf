@@ -63,17 +63,17 @@ h1 {
 
 var tmpl = template.New("error")
 
-type TemplateError struct {
+type templateError struct {
 	Format     string
 	Parameters []interface{}
 }
 
-func (e *TemplateError) Error() string {
+func (e *templateError) Error() string {
 	return fmt.Sprintf(e.Format, e.Parameters...)
 }
 
 func Errf(format string, parameters ...interface{}) error {
-	return &TemplateError{
+	return &templateError{
 		Format:     format,
 		Parameters: parameters,
 	}
