@@ -44,7 +44,7 @@ func New() *Application {
 	app.Config = NewConfig(app)
 	// debug, _ := app.Config.GetBool("debug", false)
 	app.errorHandler = make(map[int]Handler)
-	app.MiddlewareChain = NewChain(DefaultMiddlewares...)
+	app.MiddlewareChain = NewChain(defaultMiddlewares...)
 	app.DefaultErrorHandler = defaultErrorHandler
 	return app
 }

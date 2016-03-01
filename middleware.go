@@ -8,9 +8,7 @@ import (
 
 type middlewareHandler func(next Handler) Handler
 
-var (
-	DefaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware}
-)
+var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware}
 
 // A chain of middlewares.
 type Chain struct {
