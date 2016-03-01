@@ -36,4 +36,4 @@ See [golf.readthedocs.org](http://golf.readthedocs.org).
 
 ##License
 
-[Apache License](http://www.apache.org/licenses/LICENSE-2.0.html)
+[MIT License](/LICENSE)
