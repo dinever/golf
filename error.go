@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-var ErrorTemplate = `<!DOCTYPE HTML>
+var errorTemplate = `<!DOCTYPE HTML>
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -81,7 +81,7 @@ func Errf(format string, parameters ...interface{}) error {
 
 // The default error handler
 func defaultErrorHandler(ctx *Context) {
-	tmpl.Parse(ErrorTemplate)
+	tmpl.Parse(errorTemplate)
 	var buf bytes.Buffer
 	tmpl.Execute(&buf, map[string]interface{}{
 		"Code":    ctx.StatusCode,
