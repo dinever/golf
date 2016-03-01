@@ -11,19 +11,23 @@ import (
 )
 
 // Regular Expressions to find out the extension syntax.
-var re_extends *regexp.Regexp = regexp.MustCompile(`{{ ?extends ["']?([^'"}']*)["']? ?}}`)
-var re_include *regexp.Regexp = regexp.MustCompile(`{{ ?include ["']?([^"]*)["']? ?}}`)
-var re_templateTag *regexp.Regexp = regexp.MustCompile(`{{ ?template \"([^"]*)" ?([^ ]*)? ?}}`)
-var re_defineTag *regexp.Regexp = regexp.MustCompile(`{{ ?define "([^"]*)" ?"?([a-zA-Z0-9]*)?"? ?}}`)
+var reExtends = regexp.MustCompile(`{{ ?extends ["']?([^'"}']*)["']? ?}}`)
+var reInclude = regexp.MustCompile(`{{ ?include ["']?([^"]*)["']? ?}}`)
+var reTemplateTag = regexp.MustCompile(`{{ ?template \"([^"]*)" ?([^ ]*)? ?}}`)
+var reDefineTag = regexp.MustCompile(`{{ ?define "([^"]*)" ?"?([a-zA-Z0-9]*)?"? ?}}`)
 
+// TemplateLoader is the loader interface for templates.
 type TemplateLoader interface {
 	LoadTemplate(string) (string, error)
 }
 
+// FileSystemLoader is an implementation of TemplateLoader that loads templates
+// from file system.
 type FileSystemLoader struct {
 	BaseDir string
 }
 
+// LoadTemplate loads a template from a file.
 func (loader *FileSystemLoader) LoadTemplate(name string) (string, error) {
 	f, err := os.Open(path.Join(loader.BaseDir, name))
 	if err != nil {
@@ -33,8 +37,11 @@ func (loader *FileSystemLoader) LoadTemplate(name string) (string, error) {
 	return string(b), err
 }
 
+// MapLoader is a implementation of TemplateLoader taht loads templates from a
+// map data structure.
 type MapLoader map[string]string
 
+// LoadTemplate loads a template from the map.
 func (loader *MapLoader) LoadTemplate(name string) (string, error) {
 	if src, ok := (*loader)[name]; ok {
 		return src, nil
@@ -42,16 +49,19 @@ func (loader *MapLoader) LoadTemplate(name string) (string, error) {
 	return "", Errf("Could not find template " + name)
 }
 
+// TemplateManager handles the template loader and stores the function map.
 type TemplateManager struct {
 	Loader  TemplateLoader
 	FuncMap map[string]interface{} //template.FuncMap
 }
 
+// Template type stands for a template.
 type Template struct {
 	Name string
 	Src  string
 }
 
+// Render renders a template and writes it to the io.Writer interface.
 func (t *TemplateManager) Render(w io.Writer, name string, data interface{}) error {
 	stack := []*Template{}
 	tplSrc, err := t.getSrc(name)
@@ -73,6 +83,7 @@ func (t *TemplateManager) Render(w io.Writer, name string, data interface{}) err
 	return nil
 }
 
+// RenderFromString renders a template from string.
 func (t *TemplateManager) RenderFromString(w io.Writer, tplSrc string, data interface{}) error {
 	stack := []*Template{}
 	t.push(&stack, tplSrc, "_fromString")
@@ -90,14 +101,14 @@ func (t *TemplateManager) RenderFromString(w io.Writer, tplSrc string, data inte
 }
 
 func (t *TemplateManager) push(stack *[]*Template, tplSrc string, name string) error {
-	extendsMatches := re_extends.FindStringSubmatch(tplSrc)
+	extendsMatches := reExtends.FindStringSubmatch(tplSrc)
 	if len(extendsMatches) == 2 {
 		src, err := t.getSrc(extendsMatches[1])
 		t.push(stack, src, extendsMatches[1])
 		if err != nil {
 			return err
 		}
-		tplSrc = re_extends.ReplaceAllString(tplSrc, "")
+		tplSrc = reExtends.ReplaceAllString(tplSrc, "")
 	}
 	Template := &Template{
 		Name: name,
@@ -121,12 +132,12 @@ func (t *TemplateManager) getSrc(name string) (string, error) {
 
 func (t *TemplateManager) assemble(stack []*Template) (*template.Template, error) {
 	blocks := map[string]string{}
-	blockId := 0
+	blockID := 0
 
 	for _, Template := range stack {
-		var errInReplace error = nil
-		Template.Src = re_include.ReplaceAllStringFunc(Template.Src, func(raw string) string {
-			parsed := re_include.FindStringSubmatch(raw)
+		var errInReplace error
+		Template.Src = reInclude.ReplaceAllStringFunc(Template.Src, func(raw string) string {
+			parsed := reInclude.FindStringSubmatch(raw)
 			templatePath := parsed[1]
 
 			subTpl, err := t.Loader.LoadTemplate(templatePath)
@@ -144,12 +155,12 @@ func (t *TemplateManager) assemble(stack []*Template) (*template.Template, error
 
 	for _, Template := range stack {
 
-		Template.Src = re_defineTag.ReplaceAllStringFunc(Template.Src, func(raw string) string {
-			parsed := re_defineTag.FindStringSubmatch(raw)
-			blockName := fmt.Sprintf("BLOCK_%d", blockId)
+		Template.Src = reDefineTag.ReplaceAllStringFunc(Template.Src, func(raw string) string {
+			parsed := reDefineTag.FindStringSubmatch(raw)
+			blockName := fmt.Sprintf("BLOCK_%d", blockID)
 			blocks[parsed[1]] = blockName
 
-			blockId += 1
+			blockID++
 			return "{{ define \"" + blockName + "\" }}"
 		})
 	}
@@ -157,8 +168,8 @@ func (t *TemplateManager) assemble(stack []*Template) (*template.Template, error
 	var rootTemplate *template.Template
 
 	for i, Template := range stack {
-		Template.Src = re_templateTag.ReplaceAllStringFunc(Template.Src, func(raw string) string {
-			parsed := re_templateTag.FindStringSubmatch(raw)
+		Template.Src = reTemplateTag.ReplaceAllStringFunc(Template.Src, func(raw string) string {
+			parsed := reTemplateTag.FindStringSubmatch(raw)
 			origName := parsed[1]
 			replacedName, ok := blocks[origName]
 			dot := "."
@@ -167,9 +178,8 @@ func (t *TemplateManager) assemble(stack []*Template) (*template.Template, error
 			}
 			if ok {
 				return fmt.Sprintf(`{{ template "%s" %s }}`, replacedName, dot)
-			} else {
-				return ""
 			}
+			return ""
 		})
 		var thisTemplate *template.Template
 
