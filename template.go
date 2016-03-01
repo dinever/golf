@@ -37,7 +37,7 @@ func (loader *FileSystemLoader) LoadTemplate(name string) (string, error) {
 	return string(b), err
 }
 
-// MapLoader is a implementation of TemplateLoader taht loads templates from a
+// MapLoader is a implementation of TemplateLoader that loads templates from a
 // map data structure.
 type MapLoader map[string]string
 
