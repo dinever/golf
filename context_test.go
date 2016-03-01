@@ -120,7 +120,34 @@ func TestRenderFromString(t *testing.T) {
 		ctx.RenderFromString(c.src, c.args)
 		ctx.Send()
 		if w.Body.String() != c.output {
-			t.Errorf("Can not render from string correctly. %v != %v", w.Body.String(), c.output)
+			t.Errorf("Can not render from string correctly: %v != %v", w.Body.String(), c.output)
+		}
+	}
+}
+
+func TestJSON(t *testing.T) {
+	cases := []struct {
+		input  map[string]interface{}
+		output string
+	}{
+		{
+			map[string]interface{}{"status": "success", "code": 200},
+			`{"code":200,"status":"success"}`,
+		},
+	}
+
+	for _, c := range cases {
+		r := makeTestHTTPRequest(nil, "GET", "/")
+		w := httptest.NewRecorder()
+		app := New()
+		ctx := NewContext(r, w, app)
+		ctx.JSON(c.input)
+		ctx.Send()
+		if w.Body.String() != c.output {
+			t.Errorf("Can not return JSON correctly: %v != %v", w.Body.String(), c.output)
+		}
+		if w.HeaderMap.Get("Content-Type") != `application/json` {
+			t.Errorf("Content-Type didn't set properly when calling Context.JSON.")
 		}
 	}
 }
