@@ -16,7 +16,7 @@ func makeTestHTTPRequest(body io.Reader) *http.Request {
 }
 
 func TestContextCreate(t *testing.T) {
-	r := makeTestHttpRequest(nil)
+	r := makeTestHTTPRequest(nil)
 	w := httptest.NewRecorder()
 	app := New()
 	ctx := NewContext(r, w, app)
@@ -26,7 +26,7 @@ func TestContextCreate(t *testing.T) {
 }
 
 func TestCookieSet(t *testing.T) {
-	r := makeTestHttpRequest(nil)
+	r := makeTestHTTPRequest(nil)
 	w := httptest.NewRecorder()
 	app := New()
 	ctx := NewContext(r, w, app)
