@@ -78,7 +78,6 @@ func TestFromJSON(t *testing.T) {
 		t.Fail()
 	}
 	if value != "bar" {
-		t.Error(fmt.Sprintf("expected value to be abc but it was %v", value))
-		t.Fail()
+		t.Errorf("expected value to be abc but it was %v", value)
 	}
 }
