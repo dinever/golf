@@ -1,11 +1,11 @@
 package Golf
 
 import (
-	"io"
-	"fmt"
-	"path"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"path"
 	"reflect"
 	"strings"
 )
@@ -162,6 +162,7 @@ func (config *Config) Get(key string, defaultValue interface{}) (interface{}, er
 	return tmp, nil
 }
 
+// ConfigFromJSON creates a Config instance from a JSON io.reader.
 func ConfigFromJSON(reader io.Reader) (*Config, error) {
 	jsonBytes, err := ioutil.ReadAll(reader)
 	if err != nil {
