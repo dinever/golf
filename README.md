@@ -17,13 +17,23 @@ package main
 
 import "github.com/dinever/golf"
 
-func helloWorldHandler(ctx *Golf.Context) {
+func mainHandler(ctx *Golf.Context) {
   ctx.Write("Hello World!")
+}
+
+func pageHandler(ctx *Golf.Context) {
+  page, err := ctx.Param("page")
+  if err != nil {
+    ctx.Abort(500)
+    return
+  }
+  ctx.Write("Page: " + page)
 }
 
 func main() {
   app := Golf.New()
-  app.Get("/", helloWorldHandler)
+  app.Get("/", mainHandler)
+  app.Get("/p/:page/", pageHandler)
   app.Run(":9000")
 }
 ```
