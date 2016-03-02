@@ -30,10 +30,10 @@ func main() {
 
 The website will be available at http://localhost:9000.
 
-##Documents
+## Docs
 
-See [golf.readthedocs.org](http://golf.readthedocs.org).
+[golfweb.github.io](http://golfweb.github.io).
 
-##License
+## License
 
 [MIT License](/LICENSE)
