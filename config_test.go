@@ -2,7 +2,6 @@ package Golf
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 )
 
