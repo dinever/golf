@@ -1,8 +1,11 @@
 package Golf
 
 import (
+	"io"
 	"fmt"
 	"path"
+	"io/ioutil"
+	"encoding/json"
 	"reflect"
 	"strings"
 )
@@ -157,4 +160,16 @@ func (config *Config) Get(key string, defaultValue interface{}) (interface{}, er
 		}
 	}
 	return tmp, nil
+}
+
+func ConfigFromJSON(reader io.Reader) (*Config, error) {
+	jsonBytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	var obj map[string]interface{}
+	if err := json.Unmarshal(jsonBytes, &obj); err != nil {
+		return nil, err
+	}
+	return &Config{obj}, nil
 }

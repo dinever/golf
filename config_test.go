@@ -1,6 +1,8 @@
 package Golf
 
 import (
+	"fmt"
+	"bytes"
 	"testing"
 )
 
@@ -60,5 +62,23 @@ func TestConfigWithMultipleEntires(t *testing.T) {
 		if value != c.value {
 			t.Errorf("Value not match: %q != %q, key: %q", value, c.value, c.key)
 		}
+	}
+}
+
+func TestFromJSON(t *testing.T) {
+	reader := bytes.NewReader([]byte(`{"cool" : {"foo" : "bar"}}`))
+	config, err := ConfigFromJSON(reader)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	value, err := config.GetString("cool/foo", "")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if value != "bar" {
+		t.Error(fmt.Sprintf("expected value to be abc but it was %v", value))
+		t.Fail()
 	}
 }
