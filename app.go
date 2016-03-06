@@ -95,7 +95,7 @@ func (app *Application) Run(addr string) {
 }
 
 // Run app with TLS.
-func (app *Application) RunTLS(addr, certFile, keyFile) {
+func (app *Application) RunTLS(addr, certFile, keyFile string) {
 	err := http.ListenAndServeTLS(addr, certFile, keyFile, app)
 	if err != nil {
 		panic(err)
