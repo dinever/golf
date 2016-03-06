@@ -94,6 +94,14 @@ func (app *Application) Run(addr string) {
 	}
 }
 
+// Run app with TLS.
+func (app *Application) RunTLS(addr, certFile, keyFile) {
+	err := http.ListenAndServeTLS(addr, certFile, keyFile, app)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // Static is used for registering a static folder
 func (app *Application) Static(url string, path string) {
 	url = strings.TrimRight(url, "/")
