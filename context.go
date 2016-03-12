@@ -33,6 +33,9 @@ type Context struct {
 	// Data used for sharing values between middlewares
 	Data map[string]interface{}
 
+	// Session instance for the current context.
+	Session *Session
+
 	// Indicating if the response is already sent.
 	IsSent bool
 
