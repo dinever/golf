@@ -2,7 +2,6 @@ package Golf
 
 import (
 	"fmt"
-	"net/http"
 )
 
 // Session is an interface for session instance, a session instance contains
