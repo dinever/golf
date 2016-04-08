@@ -85,6 +85,15 @@ func (ctx *Context) Redirect(url string) {
 	ctx.StatusCode = 301
 }
 
+// Cookie returns the value of the cookie by indicating the key.
+func (ctx *Context) Cookie(key string) (string, error) {
+	c, err := ctx.Request.Cookie(key)
+	if err != nil {
+		return nil, err
+	}
+	return c.Value, nil
+}
+
 // SetCookie set cookies for the request. If expire is 0, create a session cookie.
 func (ctx *Context) SetCookie(key string, value string, expire int) {
 	now := time.Now()
