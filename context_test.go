@@ -1,13 +1,13 @@
 package Golf
 
 import (
-	"io"
-	"fmt"
 	"bufio"
-	"strings"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -64,7 +64,7 @@ func TestCookieSetWithExpire(t *testing.T) {
 		if cookie.Value != "3600" {
 			t.Errorf("Can not set cookie with expiration correctly.")
 		}
-  }
+	}
 }
 
 func TestTemplateLoader(t *testing.T) {
