@@ -34,7 +34,7 @@ type Context struct {
 	Data map[string]interface{}
 
 	// Session instance for the current context.
-	Session *Session
+	Session Session
 
 	// Indicating if the response is already sent.
 	IsSent bool
@@ -56,6 +56,30 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 	ctx.IsSent = false
 	ctx.Data = make(map[string]interface{})
 	return ctx
+}
+
+func (ctx *Context) generateSession() Session {
+	s, err := ctx.App.sessionManager.NewSession()
+	if err != nil {
+		panic(err)
+	}
+	// Session lifetime should be configurable.
+	ctx.SetCookie("sid", s.SessionID(), 3600)
+	return s
+}
+
+func (ctx *Context) retrieveSession() {
+	var s Session
+	sid, err := ctx.Cookie("sid")
+	if err != nil {
+		s = ctx.generateSession()
+	} else {
+		s, err = ctx.App.sessionManager.Session(sid)
+		if err != nil {
+			s = ctx.generateSession()
+		}
+	}
+	ctx.Session = s
 }
 
 // Query method retrieves the form data, return empty string if not found.

@@ -9,6 +9,13 @@ import (
 const sessionIDLength = 64
 
 // MemorySessionManager manages a map of sessions.
+type SessionManager interface {
+	sessionID() (string, error)
+	NewSession() (Session, error)
+	Session(string) (Session, error)
+}
+
+// MemorySessionManager is a implementation of Session Manager, which stores data in memory.
 type MemorySessionManager struct {
 	sessions map[string]*MemorySession
 }
