@@ -1,6 +1,6 @@
 # Golf
 
-[![Build Status](https://drone.io/github.com/dinever/golf/status.png)](https://drone.io/github.com/dinever/golf/latest)
+![Build Status](https://img.shields.io/travis/dinever/golf.svg)
 
 A web framework in Go.
 
