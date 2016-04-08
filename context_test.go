@@ -2,6 +2,9 @@ package Golf
 
 import (
 	"io"
+	"fmt"
+	"bufio"
+	"strings"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -14,6 +17,13 @@ func makeTestHTTPRequest(body io.Reader, method, url string) *http.Request {
 		return nil
 	}
 	return req
+}
+
+func makeTestContext(method, url string) *Context {
+	r := makeTestHTTPRequest(nil, method, url)
+	w := httptest.NewRecorder()
+	app := New()
+	return NewContext(r, w, app)
 }
 
 func TestContextCreate(t *testing.T) {
@@ -35,6 +45,33 @@ func TestCookieSet(t *testing.T) {
 	ctx.Send()
 	if w.HeaderMap.Get("Set-Cookie") != `foo=bar; Path=/` {
 		t.Errorf("Cookie test failed: %q != %q", w.HeaderMap.Get("Set-Cookie"), `foo=bar; Path=/`)
+	}
+}
+
+func TestCookieSetWithExpire(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/foo/bar/")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	ctx.SetCookie("foo", "bar", 3600)
+	ctx.Send()
+	rawCookie := w.HeaderMap.Get("Set-Cookie")
+	rawRequest := fmt.Sprintf("GET / HTTP/1.0\r\nCookie: %s\r\n\r\n", rawCookie)
+	req, err := http.ReadRequest(bufio.NewReader(strings.NewReader(rawRequest)))
+	if err == nil {
+		cookies := req.Cookies()
+		cookie := cookies[3]
+		if cookie.Value != "3600" {
+			t.Errorf("Can not set cookie with expiration correctly.")
+		}
+  }
+}
+
+func TestTemplateLoader(t *testing.T) {
+	ctx := makeTestContext("GET", "/")
+	ctx.Loader("admin")
+	if ctx.templateLoader != "admin" {
+		t.Errorf("Can not set templateLoader for Context.")
 	}
 }
 
