@@ -61,6 +61,31 @@ func TestQuery(t *testing.T) {
 	}
 }
 
+func TestQueries(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/search?myarray=value1&myarray=value2&myarray=value3")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	q, err := ctx.Query("myarray", 2)
+	if err != nil {
+		t.Errorf("Can not retrieve a query.")
+	}
+	if q != "value3" {
+		t.Errorf("Can not correctly retrive a query.")
+	}
+}
+
+func TestQueryNotFound(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/search?myarray=value1&myarray=value2&myarray=value3")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	q, err := ctx.Query("query")
+	if err == nil || q != "" {
+		t.Errorf("Can not raise error when query not found.")
+	}
+}
+
 func makeNewContext(method, url string) *Context {
 	r := makeTestHTTPRequest(nil, method, url)
 	w := httptest.NewRecorder()
