@@ -1,10 +1,10 @@
 # Golf
 
-[![Build Status](https://drone.io/github.com/dinever/golf/status.png)](https://drone.io/github.com/dinever/golf/latest)
+![Build Status](https://img.shields.io/travis/dinever/golf.svg)
 
 A web framework in Go.
 
-Homepage: [golfweb.github.io](http://golfweb.github.io)
+Homepage: [golf.readme.io](https://golf.readme.io/)
 
 ## Installation
 
@@ -42,7 +42,7 @@ The website will be available at http://localhost:9000.
 
 ## Docs
 
-[golfweb.github.io](http://golfweb.github.io).
+[golf.readme.io/docs](https://golf.readme.io/docs).
 
 ## License
 
