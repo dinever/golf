@@ -4,7 +4,7 @@
 
 A web framework in Go.
 
-Homepage: [golfweb.github.io](http://golfweb.github.io)
+Homepage: [golf.readme.io/](https://golf.readme.io/)
 
 ## Installation
 
