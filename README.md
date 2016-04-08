@@ -42,7 +42,7 @@ The website will be available at http://localhost:9000.
 
 ## Docs
 
-[golf.readme.io/docs](https://golf.readme.io/docs).
+[golf.readme.io/docs](https://golf.readme.io/docs)
 
 ## License
 
