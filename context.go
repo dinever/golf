@@ -89,7 +89,7 @@ func (ctx *Context) Redirect(url string) {
 func (ctx *Context) Cookie(key string) (string, error) {
 	c, err := ctx.Request.Cookie(key)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return c.Value, nil
 }
