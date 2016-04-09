@@ -1,4 +1,4 @@
-<img width=500px src="/golf-logo-blue.png"></img>
+<a href="http://golf.readme.io"><img width=500px src="/golf-logo-blue.png"></img></a>
 
 ![Build Status](https://img.shields.io/travis/dinever/golf.svg)
 
