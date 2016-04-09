@@ -1,5 +1,3 @@
-![Golf Logo](/golf-logo-blue.png)
-
 <img width=500px src="/golf-logo-blue.png"></img>
 
 ![Build Status](https://img.shields.io/travis/dinever/golf.svg)
