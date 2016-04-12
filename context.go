@@ -1,11 +1,11 @@
 package Golf
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
-	"encoding/hex"
 )
 
 // Context is a wrapper of http.Request and http.ResponseWriter.

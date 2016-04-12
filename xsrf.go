@@ -1,9 +1,9 @@
 package Golf
 
 import (
-	"time"
-	"math/rand"
 	"encoding/hex"
+	"math/rand"
+	"time"
 )
 
 const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -29,17 +29,17 @@ func decodeXSRFToken(maskedToken string) ([]byte, []byte) {
 
 func websocketMask(mask, data []byte) []byte {
 	for i, v := range data {
-		data[i] = v ^ mask[i % 4]
+		data[i] = v ^ mask[i%4]
 	}
 	return data
 }
 
 func compareToken(tokenA, tokenB []byte) bool {
 	if tokenA == nil && tokenB == nil {
-		return true;
+		return true
 	}
 	if tokenA == nil || tokenB == nil {
-		return false;
+		return false
 	}
 	if len(tokenA) != len(tokenB) {
 		return false
