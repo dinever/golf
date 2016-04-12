@@ -52,7 +52,7 @@ func (view *View) RenderFromString(loaderName string, tplSrc string, data map[st
 	}
 	loader, ok := view.templateLoader[loaderName]
 	if !ok {
-		panic(Errf("Template loader not fount: %s", loaderName))
+		panic(Errorf("Template loader not fount: %s", loaderName))
 	}
 	e := loader.Render(&buf, tplSrc, data)
 	if e != nil {

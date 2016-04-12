@@ -167,9 +167,10 @@ func (ctx *Context) Write(content string) {
 // Abort method returns an HTTP Error by indicating the status code, the corresponding
 // handler inside `App.errorHandler` will be called, if user has not set
 // the corresponding error handler, the defaultErrorHandler will be called.
-func (ctx *Context) Abort(statusCode int) {
+func (ctx *Context) Abort(statusCode int, data ...map[string]interface{}) {
 	ctx.StatusCode = statusCode
-	ctx.App.handleError(ctx, statusCode)
+	ctx.App.handleError(ctx, statusCode, data...)
+	ctx.Send()
 }
 
 // Loader method sets the template loader for this context. This should be done before calling
@@ -227,9 +228,15 @@ func (ctx *Context) Render(file string, data ...map[string]interface{}) {
 }
 
 // RenderFromString renders a input string.
-func (ctx *Context) RenderFromString(tplSrc string, data map[string]interface{}) {
-	data["xsrf_token"] = ctx.xsrfToken()
-	content, e := ctx.App.View.RenderFromString(ctx.templateLoader, tplSrc, data)
+func (ctx *Context) RenderFromString(tplSrc string, data ...map[string]interface{}) {
+	var renderData map[string]interface{}
+	if len(data) == 0 {
+		renderData = make(map[string]interface{})
+		renderData["xsrf_token"] = ctx.xsrfToken()
+	} else {
+		renderData = data[0]
+	}
+	content, e := ctx.App.View.RenderFromString(ctx.templateLoader, tplSrc, renderData)
 	if e != nil {
 		panic(e)
 	}

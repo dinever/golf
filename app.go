@@ -30,11 +30,11 @@ type Application struct {
 	// MiddlewareChain is the default middlewares that Golf uses.
 	MiddlewareChain *Chain
 
-	errorHandler map[int]Handler
+	errorHandler map[int]ErrorHandlerType
 
 	// The default error handler, if the corresponding error code is not specified
 	// in the `errorHandler` map, this handler will be called.
-	DefaultErrorHandler Handler
+	DefaultErrorHandler ErrorHandlerType
 }
 
 // New is used for creating a new Golf Application instance.
@@ -47,7 +47,7 @@ func New() *Application {
 	// TODO: SessionManager should be configurable
 	app.sessionManager = NewMemorySessionManager()
 	// debug, _ := app.Config.GetBool("debug", false)
-	app.errorHandler = make(map[int]Handler)
+	app.errorHandler = make(map[int]ErrorHandlerType)
 	app.MiddlewareChain = NewChain(defaultMiddlewares...)
 	app.DefaultErrorHandler = defaultErrorHandler
 	return app
@@ -134,17 +134,17 @@ func (app *Application) Delete(pattern string, handler Handler) {
 }
 
 // Error method is used for registering an handler for a specified HTTP error code.
-func (app *Application) Error(statusCode int, handler Handler) {
+func (app *Application) Error(statusCode int, handler ErrorHandlerType) {
 	app.errorHandler[statusCode] = handler
 }
 
 // Handles a HTTP Error, if there is a corresponding handler set in the map
 // `errorHandler`, then call it. Otherwise call the `defaultErrorHandler`.
-func (app *Application) handleError(ctx *Context, statusCode int) {
+func (app *Application) handleError(ctx *Context, statusCode int, data ...map[string]interface{}) {
 	ctx.StatusCode = statusCode
 	handler, ok := app.errorHandler[ctx.StatusCode]
 	if !ok {
-		defaultErrorHandler(ctx)
+		defaultErrorHandler(ctx, data...)
 		return
 	}
 	handler(ctx)
