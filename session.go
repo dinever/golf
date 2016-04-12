@@ -81,7 +81,7 @@ func (s *MemorySession) Get(key string) (interface{}, error) {
 	if value, ok := s.data[key]; ok {
 		return value, nil
 	}
-	return nil, fmt.Errorf("key %q in session (id %d) not found", key, s.sid)
+	return nil, fmt.Errorf("key %q in session (id %s) not found", key, s.sid)
 }
 
 // Delete method deletes the value by given a key in the session.
