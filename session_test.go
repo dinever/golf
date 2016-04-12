@@ -29,7 +29,7 @@ func TestMemorySession(t *testing.T) {
 		if err != nil {
 			t.Errorf("Could not delete session key.")
 		}
-		value, err = s.Get(c.key)
+		_, err = s.Get(c.key)
 		if err == nil {
 			t.Errorf("Could not correctly delete session key.")
 		}
@@ -43,7 +43,7 @@ func TestMemorySessionManager(t *testing.T) {
 		t.Errorf("Could not create a new session.")
 	}
 	sid := s.SessionID()
-	newSession, err := mgr.Session(sid)
+	newSession, _ := mgr.Session(sid)
 	if newSession.SessionID() != s.SessionID() {
 		t.Errorf("Memory session manager could not retrieve a previously generated session.")
 	}
