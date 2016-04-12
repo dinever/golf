@@ -9,13 +9,16 @@ func handler(ctx *Context) {}
 
 func TestParsePatternWithOneParam(t *testing.T) {
 	cases := []struct {
-		in, regex, param string
+		method, in, regex, param string
 	}{
-		{"/:id/", `^/([\w-%]+)/$`, "id"},
+		{routerMethodGet, "/:id/", `^/([\w-%]+)/$`, "id"},
+		{routerMethodPost, "/:id/", `^/([\w-%]+)/$`, "id"},
+		{routerMethodPut, "/:id/", `^/([\w-%]+)/$`, "id"},
+		{routerMethodDelete, "/:id/", `^/([\w-%]+)/$`, "id"},
 	}
 
 	for _, c := range cases {
-		route := newRoute(routerMethodGet, c.in, handler)
+		route := newRoute(c.method, c.in, handler)
 		if route.regex.String() != c.regex {
 			t.Errorf("regex of %q  == %q, want %q", c.in, route.regex.String(), c.regex)
 		}
