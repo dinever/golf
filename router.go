@@ -19,7 +19,7 @@ type router struct {
 // Handler is the type of the handler function that Golf accepts.
 type Handler func(ctx *Context)
 
-// ErrorHandler is the type of the function that handles error in Golf.
+// ErrorHandlerType is the type of the function that handles error in Golf.
 type ErrorHandlerType func(ctx *Context, data ...map[string]interface{})
 
 // ErrorHandler is the type of the error handler function that Golf accepts.

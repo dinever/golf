@@ -100,23 +100,6 @@ const maxFrames = 20
 
 var tmpl = template.New("error")
 
-type templateError struct {
-	Format     string
-	Parameters []interface{}
-}
-
-func (e *templateError) Error() string {
-	return fmt.Sprintf(e.Format, e.Parameters...)
-}
-
-// Errf returns an templateError.
-func Errf(format string, parameters ...interface{}) error {
-	return &templateError{
-		Format:     format,
-		Parameters: parameters,
-	}
-}
-
 // The default error handler
 func defaultErrorHandler(ctx *Context, data ...map[string]interface{}) {
 	var renderData map[string]interface{}
@@ -166,6 +149,7 @@ func (e Error) Error() string {
 	return e.Message
 }
 
+// StackTraceString returns the stack trace in a string format.
 func (e Error) StackTraceString() string {
 	buf := new(bytes.Buffer)
 	for _, v := range e.Stack {
@@ -174,6 +158,12 @@ func (e Error) StackTraceString() string {
 	return string(buf.Bytes())
 }
 
+// Errorf returns an templateError.
+func Errorf(format string, parameters ...interface{}) error {
+	return fmt.Errorf(format, parameters...)
+}
+
+// NewError creates a new error instance
 func NewError(msg interface{}) Error {
 	var err error
 
