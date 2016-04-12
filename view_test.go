@@ -34,12 +34,20 @@ func TestStringRendering(t *testing.T) {
 
 	for _, c := range cases {
 		view := NewView()
-		result, error := view.RenderFromString("", c.content, c.args)
-		if error != nil {
-			panic(error)
+		result, err := view.RenderFromString("", c.content, c.args)
+		if err != nil {
+			t.Errorf("Can not render from string")
 		}
 		if result != c.output {
 			t.Errorf("Rendered content %q != %q", result, c.output)
 		}
+	}
+}
+
+func TestSetTemplateLoader(t *testing.T) {
+	view := NewView()
+	view.SetTemplateLoader("test", "/test/path/")
+	if view.templateLoader["test"] == nil {
+		t.Errorf("Could not set template loader for view")
 	}
 }
