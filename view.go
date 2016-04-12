@@ -71,13 +71,3 @@ func (view *View) SetTemplateLoader(name string, path string) {
 	}
 	view.templateLoader[name] = loader
 }
-
-// ErrorPage returns an error page.
-func (view *View) ErrorPage(err error) string {
-	text := `<!DOCTYPE HTML><html> <head> <meta http-equiv="content-type" content="text/html; charset=utf-8"> <title>{{.Title}}</title> <style type="text/css" media="screen">html,body{padding:0; margin:0; font-family: Tahoma; color: #34495e;}h1{color: #fff; margin: 0;}.container{max-width: 1220px; margin: 0 auto; padding: 0 20px;}#header{display: block; background-color: #3498db; height: 120px; width: 100%;}#title{padding: 40px 0;}</style> </head> <body style="background-color: #E4F9F5"> <div id="header"> <div class="container"> <div id="title"> <h1>{{.Title}}</h1> </div></div></div><div class="container"> <p>{{.Content}}</p></div></body></html>`
-	tmpl := template.New("error")
-	tmpl.Parse(text)
-	var buf bytes.Buffer
-	tmpl.Execute(&buf, map[string]interface{}{"Title": "Server Error", "Content": err.Error()})
-	return buf.String()
-}
