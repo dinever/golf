@@ -8,7 +8,7 @@ import (
 
 type middlewareHandler func(next Handler) Handler
 
-var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware}
+var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware, XSRFProtectionMiddleware}
 
 // Chain contains a sequence of middlewares.
 type Chain struct {
@@ -66,6 +66,20 @@ func RecoverMiddleware(next Handler) Handler {
 				ctx.App.handleError(ctx, 500)
 			}
 		}()
+		next(ctx)
+	}
+	return fn
+}
+
+// XSRFProtectionMiddleware is the built-in middleware for XSRF protection.
+func XSRFProtectionMiddleware(next Handler) Handler {
+	fn := func(ctx *Context) {
+		if ctx.Request.Method == "POST" {
+			if !checkXSRFToken(ctx) {
+				ctx.App.handleError(ctx, 403)
+				return
+			}
+		}
 		next(ctx)
 	}
 	return fn

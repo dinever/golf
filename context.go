@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"encoding/hex"
 )
 
 // Context is a wrapper of http.Request and http.ResponseWriter.
@@ -178,8 +179,40 @@ func (ctx *Context) Loader(name string) *Context {
 	return ctx
 }
 
+func (ctx *Context) getRawXSRFToken() string {
+	token, err := ctx.Cookie("_xsrf")
+	if err != nil {
+		return ""
+	}
+	return token
+}
+
+func checkXSRFToken(ctx *Context) bool {
+	token := ctx.Request.FormValue("xsrf_token")
+	if token == "" {
+		ctx.Abort(403)
+		return false
+	}
+	_, tokenA := decodeXSRFToken(token)
+	_, tokenB := decodeXSRFToken(ctx.getRawXSRFToken())
+	return compareToken(tokenA, tokenB)
+}
+
+func (ctx *Context) xsrfToken() string {
+	maskedToken := ctx.getRawXSRFToken()
+	if maskedToken == "" {
+		maskedToken = newXSRFToken()
+		ctx.SetCookie("_xsrf", maskedToken, 3600)
+	}
+	_, tokenBytes := decodeXSRFToken(maskedToken)
+	maskBytes := randomBytes(4)
+	maskedTokenBytes := append(maskBytes, websocketMask(maskBytes, tokenBytes)...)
+	return hex.EncodeToString(maskedTokenBytes)
+}
+
 // Render a template file using the built-in Go template engine.
-func (ctx *Context) Render(file string, data interface{}) {
+func (ctx *Context) Render(file string, data map[string]interface{}) {
+	data["xsrf_token"] = ctx.xsrfToken()
 	content, e := ctx.App.View.Render(ctx.templateLoader, file, data)
 	if e != nil {
 		panic(e)
@@ -188,7 +221,8 @@ func (ctx *Context) Render(file string, data interface{}) {
 }
 
 // RenderFromString renders a input string.
-func (ctx *Context) RenderFromString(tplSrc string, data interface{}) {
+func (ctx *Context) RenderFromString(tplSrc string, data map[string]interface{}) {
+	data["xsrf_token"] = ctx.xsrfToken()
 	content, e := ctx.App.View.RenderFromString(ctx.templateLoader, tplSrc, data)
 	if e != nil {
 		panic(e)
