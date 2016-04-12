@@ -43,8 +43,8 @@ func TestMemorySessionManager(t *testing.T) {
 		t.Errorf("Could not create a new session.")
 	}
 	sid := s.SessionID()
-	s_new, err := mgr.Session(sid)
-	if s_new.SessionID() != s.SessionID() {
+	newSession, err := mgr.Session(sid)
+	if newSession.SessionID() != s.SessionID() {
 		t.Errorf("Memory session manager could not retrieve a previously generated session.")
 	}
 }

@@ -8,7 +8,7 @@ import (
 
 const sessionIDLength = 64
 
-// MemorySessionManager manages a map of sessions.
+// SessionManager manages a map of sessions.
 type SessionManager interface {
 	sessionID() (string, error)
 	NewSession() (Session, error)
