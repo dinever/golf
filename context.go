@@ -30,7 +30,7 @@ type Context struct {
 	// The application
 	App *Application
 
-	// Data used for sharing values between middlewares
+	// Data used for sharing values among middlewares
 	Data map[string]interface{}
 
 	// Session instance for the current context.
