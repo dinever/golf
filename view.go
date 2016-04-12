@@ -25,7 +25,7 @@ func NewView() *View {
 }
 
 // Render renders a template by indicating the file path and the name of the template loader.
-func (view *View) Render(loaderName string, filePath string, data interface{}) (string, error) {
+func (view *View) Render(loaderName string, filePath string, data map[string]interface{}) (string, error) {
 	loader, ok := view.templateLoader[loaderName]
 	if !ok {
 		panic(errors.New("Template loader not found: " + loaderName))
@@ -40,7 +40,7 @@ func (view *View) Render(loaderName string, filePath string, data interface{}) (
 
 // RenderFromString does the same thing as render but renders a template by
 // indicating the template source from tplSrc.
-func (view *View) RenderFromString(loaderName string, tplSrc string, data interface{}) (string, error) {
+func (view *View) RenderFromString(loaderName string, tplSrc string, data map[string]interface{}) (string, error) {
 	var buf bytes.Buffer
 	// If loaderName is not indicated, use the default template library of Go, no syntax like
 	// `extends` or `include` will be supported.

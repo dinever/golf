@@ -211,9 +211,15 @@ func (ctx *Context) xsrfToken() string {
 }
 
 // Render a template file using the built-in Go template engine.
-func (ctx *Context) Render(file string, data map[string]interface{}) {
-	data["xsrf_token"] = ctx.xsrfToken()
-	content, e := ctx.App.View.Render(ctx.templateLoader, file, data)
+func (ctx *Context) Render(file string, data ...map[string]interface{}) {
+	var renderData map[string]interface{}
+	if len(data) == 0 {
+		renderData = make(map[string]interface{})
+		renderData["xsrf_token"] = ctx.xsrfToken()
+	} else {
+		renderData = data[0]
+	}
+	content, e := ctx.App.View.Render(ctx.templateLoader, file, renderData)
 	if e != nil {
 		panic(e)
 	}
