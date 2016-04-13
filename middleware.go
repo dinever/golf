@@ -8,7 +8,7 @@ import (
 
 type middlewareHandler func(next Handler) Handler
 
-var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware, XSRFProtectionMiddleware}
+var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware, XSRFProtectionMiddleware, SessionMiddleware}
 
 // Chain contains a sequence of middlewares.
 type Chain struct {
@@ -53,8 +53,8 @@ func XSRFProtectionMiddleware(next Handler) Handler {
 	fn := func(ctx *Context) {
 		xsrfEnabled, _ := ctx.App.Config.GetBool("xsrf_cookies", false)
 		if xsrfEnabled && (ctx.Request.Method == "POST" || ctx.Request.Method == "PUT" || ctx.Request.Method == "DELETE") {
-			if !checkXSRFToken(ctx) {
-				ctx.App.handleError(ctx, 403)
+			if !ctx.checkXSRFToken() {
+				ctx.Abort(403)
 				return
 			}
 		}
@@ -81,6 +81,16 @@ func RecoverMiddleware(next Handler) Handler {
 				})
 			}
 		}()
+		next(ctx)
+	}
+	return fn
+}
+
+func SessionMiddleware(next Handler) Handler {
+	fn := func(ctx *Context) {
+		if ctx.App.SessionManager != nil {
+			ctx.retrieveSession()
+		}
 		next(ctx)
 	}
 	return fn

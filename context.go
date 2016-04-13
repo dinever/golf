@@ -60,9 +60,9 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 }
 
 func (ctx *Context) generateSession() Session {
-	s, err := ctx.App.sessionManager.NewSession()
+	s, err := ctx.App.SessionManager.NewSession()
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	// Session lifetime should be configurable.
 	ctx.SetCookie("sid", s.SessionID(), 3600)
@@ -75,7 +75,7 @@ func (ctx *Context) retrieveSession() {
 	if err != nil {
 		s = ctx.generateSession()
 	} else {
-		s, err = ctx.App.sessionManager.Session(sid)
+		s, err = ctx.App.SessionManager.Session(sid)
 		if err != nil {
 			s = ctx.generateSession()
 		}
@@ -188,10 +188,9 @@ func (ctx *Context) getRawXSRFToken() string {
 	return token
 }
 
-func checkXSRFToken(ctx *Context) bool {
+func (ctx *Context) checkXSRFToken() bool {
 	token := ctx.Request.FormValue("xsrf_token")
 	if token == "" {
-		ctx.Abort(403)
 		return false
 	}
 	_, tokenA := decodeXSRFToken(token)
@@ -216,10 +215,10 @@ func (ctx *Context) Render(file string, data ...map[string]interface{}) {
 	var renderData map[string]interface{}
 	if len(data) == 0 {
 		renderData = make(map[string]interface{})
-		renderData["xsrf_token"] = ctx.xsrfToken()
 	} else {
 		renderData = data[0]
 	}
+	renderData["xsrf_token"] = ctx.xsrfToken()
 	content, e := ctx.App.View.Render(ctx.templateLoader, file, renderData)
 	if e != nil {
 		panic(e)
@@ -232,10 +231,10 @@ func (ctx *Context) RenderFromString(tplSrc string, data ...map[string]interface
 	var renderData map[string]interface{}
 	if len(data) == 0 {
 		renderData = make(map[string]interface{})
-		renderData["xsrf_token"] = ctx.xsrfToken()
 	} else {
 		renderData = data[0]
 	}
+	renderData["xsrf_token"] = ctx.xsrfToken()
 	content, e := ctx.App.View.RenderFromString(ctx.templateLoader, tplSrc, renderData)
 	if e != nil {
 		panic(e)
