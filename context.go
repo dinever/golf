@@ -60,7 +60,7 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 }
 
 func (ctx *Context) generateSession() Session {
-	s, err := ctx.App.sessionManager.NewSession()
+	s, err := ctx.App.SessionManager.NewSession()
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +75,7 @@ func (ctx *Context) retrieveSession() {
 	if err != nil {
 		s = ctx.generateSession()
 	} else {
-		s, err = ctx.App.sessionManager.Session(sid)
+		s, err = ctx.App.SessionManager.Session(sid)
 		if err != nil {
 			s = ctx.generateSession()
 		}

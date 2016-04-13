@@ -88,7 +88,9 @@ func RecoverMiddleware(next Handler) Handler {
 
 func SessionMiddleware(next Handler) Handler {
 	fn := func(ctx *Context) {
-		ctx.retrieveSession()
+		if ctx.App.SessionManager != nil {
+			ctx.retrieveSession()
+		}
 		next(ctx)
 	}
 	return fn

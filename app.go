@@ -22,7 +22,7 @@ type Application struct {
 	// Config provides configuration management.
 	Config *Config
 
-	sessionManager SessionManager
+	SessionManager SessionManager
 
 	// NotFoundHandler handles requests when no route is matched.
 	NotFoundHandler Handler
@@ -44,8 +44,6 @@ func New() *Application {
 	app.staticRouter = make(map[string][]string)
 	app.View = NewView()
 	app.Config = NewConfig(app)
-	// TODO: SessionManager should be configurable
-	app.sessionManager = NewMemorySessionManager()
 	// debug, _ := app.Config.GetBool("debug", false)
 	app.errorHandler = make(map[int]ErrorHandlerType)
 	app.MiddlewareChain = NewChain(defaultMiddlewares...)
