@@ -1,4 +1,4 @@
-<a href="http://golf.readme.io"><img width=500px src="/golf-logo-blue.png"></img></a>
+<a href="http://golf.readme.io"><img width=50% src="/golf-logo.png"></img></a>
 
 [![GoDoc](http://img.shields.io/badge/golf-documentation-blue.svg?style=flat-square)](http://golf.readme.io/docs)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/dinever/golf/master/LICENSE) 
