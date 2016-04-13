@@ -8,7 +8,7 @@ import (
 
 type middlewareHandler func(next Handler) Handler
 
-var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware, XSRFProtectionMiddleware}
+var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware, XSRFProtectionMiddleware, SessionMiddleware}
 
 // Chain contains a sequence of middlewares.
 type Chain struct {
@@ -81,6 +81,14 @@ func RecoverMiddleware(next Handler) Handler {
 				})
 			}
 		}()
+		next(ctx)
+	}
+	return fn
+}
+
+func SessionMiddleware(next Handler) Handler {
+	fn := func(ctx *Context) {
+		ctx.retrieveSession()
 		next(ctx)
 	}
 	return fn

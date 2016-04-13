@@ -72,7 +72,6 @@ func (app *Application) handler(ctx *Context) {
 	params, handler := app.router.match(ctx.Request.URL.Path, ctx.Request.Method)
 	if handler != nil {
 		ctx.Params = params
-		ctx.retrieveSession()
 		handler(ctx)
 	} else {
 		app.handleError(ctx, 404)
