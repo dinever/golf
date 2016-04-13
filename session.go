@@ -45,10 +45,13 @@ func (mgr *MemorySessionManager) sessionID() (string, error) {
 
 // Session gets the session instance by indicating a session id.
 func (mgr *MemorySessionManager) Session(sid string) (Session, error) {
+	mgr.lock.RLock()
 	if s, ok := mgr.sessions[sid]; ok {
 		s.createdAt = time.Now()
+		mgr.lock.RUnlock()
 		return s, nil
 	}
+	mgr.lock.RUnlock()
 	return nil, fmt.Errorf("Can not retrieve session with id %s.", sid)
 }
 
@@ -59,9 +62,9 @@ func (mgr *MemorySessionManager) NewSession() (Session, error) {
 		return nil, err
 	}
 	s := MemorySession{sid: sid, data: make(map[string]interface{}), createdAt: time.Now()}
-	mgr.lock.RLock()
+	mgr.lock.Lock()
 	mgr.sessions[sid] = &s
-	mgr.lock.RUnlock()
+	mgr.lock.Unlock()
 	return &s, nil
 }
 
