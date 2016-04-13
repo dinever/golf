@@ -62,7 +62,7 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 func (ctx *Context) generateSession() Session {
 	s, err := ctx.App.SessionManager.NewSession()
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	// Session lifetime should be configurable.
 	ctx.SetCookie("sid", s.SessionID(), 3600)

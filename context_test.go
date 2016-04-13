@@ -36,6 +36,52 @@ func TestContextCreate(t *testing.T) {
 	}
 }
 
+func TestParam(t *testing.T) {
+	_, app, r, w := makeTestContext("POST", "/foo/")
+	app.MiddlewareChain = NewChain()
+	app.Post("/:page/", func(ctx *Context) {
+		v, err := ctx.Param("page")
+		if err != nil {
+			t.Errorf("Could not retrieve parameter.")
+		}
+		if v != "foo" {
+			t.Errorf("Could not retrieve correct parameter.")
+		}
+		ctx.Write("success")
+	})
+	app.ServeHTTP(w, r)
+}
+
+func TestParamWithMultipleParameters(t *testing.T) {
+	_, app, r, w := makeTestContext("POST", "/dinever/golf/")
+	app.MiddlewareChain = NewChain()
+	app.Post("/:user/:repo/", func(ctx *Context) {
+		v, err := ctx.Param("user")
+		if err != nil {
+			t.Errorf("Could not retrieve parameter.")
+		}
+		if v != "dinever" {
+			t.Errorf("Could not retrieve correct parameter. %v != %v", v, "dinever")
+		}
+		v, err = ctx.Param("repo")
+		if err != nil {
+			t.Errorf("Could not retrieve parameter.")
+		}
+		if v != "golf" {
+			t.Errorf("Could not retrieve correct parameter. %v != %v", v, "golf")
+		}
+		v, err = ctx.Param("org")
+		if err == nil {
+			t.Errorf("Should have returned an error with invalid parameter query.")
+		}
+		if v != "" {
+			t.Errorf("Should have returned an empty string with invalid parameter query.")
+		}
+		ctx.Write("success")
+	})
+	app.ServeHTTP(w, r)
+}
+
 func TestCookieSet(t *testing.T) {
 	r := makeTestHTTPRequest(nil, "GET", "/foo/bar/")
 	w := httptest.NewRecorder()
