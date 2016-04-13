@@ -1,6 +1,9 @@
 <a href="http://golf.readme.io"><img width=500px src="/golf-logo-blue.png"></img></a>
 
-![Build Status](https://img.shields.io/travis/dinever/golf.svg)
+[![GoDoc](http://img.shields.io/badge/golf-documentation-blue.svg?style=flat-square)](http://golf.readme.io/docs)
+[![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/dinever/golf/master/LICENSE) 
+[![Build Status](http://img.shields.io/travis/dinever/golf.svg?style=flat-square)](https://travis-ci.org/dinever/golf) 
+[![Coverage Status](http://img.shields.io/coveralls/dinever/golf.svg?style=flat-square)](https://coveralls.io/r/dinever/golf?branch=master)
 
 A web framework in Go.
 
