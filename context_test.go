@@ -19,11 +19,11 @@ func makeTestHTTPRequest(body io.Reader, method, url string) *http.Request {
 	return req
 }
 
-func makeTestContext(method, url string) *Context {
+func makeTestContext(method, url string) (*Context, *Application, *http.Request, *httptest.ResponseRecorder) {
 	r := makeTestHTTPRequest(nil, method, url)
 	w := httptest.NewRecorder()
 	app := New()
-	return NewContext(r, w, app)
+	return NewContext(r, w, app), app, r, w
 }
 
 func TestContextCreate(t *testing.T) {
@@ -32,7 +32,7 @@ func TestContextCreate(t *testing.T) {
 	app := New()
 	ctx := NewContext(r, w, app)
 	if ctx == nil {
-		t.Errorf("Can not create context.")
+		t.Errorf("Could not create context.")
 	}
 }
 
@@ -62,16 +62,82 @@ func TestCookieSetWithExpire(t *testing.T) {
 		cookies := req.Cookies()
 		cookie := cookies[3]
 		if cookie.Value != "3600" {
-			t.Errorf("Can not set cookie with expiration correctly.")
+			t.Errorf("Could not set cookie with expiration correctly.")
 		}
 	}
 }
 
+func TestSessionWithInvalidSid(t *testing.T) {
+	ctx, app, r, w := makeTestContext("GET", "/foo/bar/")
+	app.SessionManager = NewMemorySessionManager()
+	ctx.retrieveSession()
+	if ctx.Session == nil {
+		t.Errorf("Could not retrieve session when there is no sid.")
+	}
+	r.AddCookie(&http.Cookie{Name: "sid", Value: "abc"})
+	ctx = NewContext(r, w, app)
+	ctx.retrieveSession()
+	if ctx.Session == nil {
+		t.Errorf("Could not retrieve session when sid is not valid.")
+	}
+}
+
+func TestSession(t *testing.T) {
+	_, app, r, w := makeTestContext("GET", "/foo/")
+	app.SessionManager = NewMemorySessionManager()
+	app.MiddlewareChain = NewChain(SessionMiddleware)
+	var (
+		firstSid string
+	)
+	app.Get("/foo/", func(ctx *Context) {
+		if ctx.Session == nil {
+			t.Errorf("Could not retrieve session.")
+		}
+		firstSid = ctx.Session.SessionID()
+		ctx.Write("success")
+	})
+	app.ServeHTTP(w, r)
+	app.Get("/bar/", func(ctx *Context) {
+		if ctx.Session.SessionID() != firstSid {
+			t.Errorf("Could not retrieve correct session from the same user.")
+		}
+		ctx.Write("success")
+	})
+	_, _, r, w = makeTestContext("GET", "/bar/")
+	r.AddCookie(&http.Cookie{Name: "sid", Value: firstSid})
+	app.ServeHTTP(w, r)
+}
+
+func TestXSRFProtectionWithoutCookie(t *testing.T) {
+	ctx, app, _, _ := makeTestContext("GET", "/foo/bar/")
+	app.Config.Set("xsrf_cookies", true)
+	if ctx.getRawXSRFToken() != "" {
+		t.Errorf("Should not retrieve raw XSRF token when there is no `_xsrf` cookie set.")
+	}
+}
+
+func TestXSRFProtectionDisabled(t *testing.T) {
+	_, app, r, w := makeTestContext("POST", "/foo/bar/")
+	app.MiddlewareChain = NewChain(XSRFProtectionMiddleware)
+	app.Post("/foo/bar/", func(ctx *Context) {
+		ctx.Write("success")
+	})
+	app.ServeHTTP(w, r)
+
+	if w.Code == 403 {
+		t.Errorf("Should not check XSRF")
+	}
+
+	if w.Body.String() != "success" {
+		t.Errorf("Did not returned expected result.")
+	}
+}
+
 func TestTemplateLoader(t *testing.T) {
-	ctx := makeTestContext("GET", "/")
+	ctx, _, _, _ := makeTestContext("GET", "/")
 	ctx.Loader("admin")
 	if ctx.templateLoader != "admin" {
-		t.Errorf("Can not set templateLoader for Context.")
+		t.Errorf("Could not set templateLoader for Context.")
 	}
 }
 
@@ -82,18 +148,18 @@ func TestQuery(t *testing.T) {
 	ctx := NewContext(r, w, app)
 	q, err := ctx.Query("q")
 	if err != nil {
-		t.Errorf("Can not retrieve a query.")
+		t.Errorf("Could not retrieve a query.")
 	} else {
 		if q != "foo" {
-			t.Errorf("Can not retrieve the correct query `q`.")
+			t.Errorf("Could not retrieve the correct query `q`.")
 		}
 	}
 	p, err := ctx.Query("p")
 	if err != nil {
-		t.Errorf("Can not retrieve a query.")
+		t.Errorf("Could not retrieve a query.")
 	} else {
 		if p != "bar" {
-			t.Errorf("Can not retrieve the correct query `p`.")
+			t.Errorf("Could not retrieve the correct query `p`.")
 		}
 	}
 }
@@ -105,10 +171,10 @@ func TestQueries(t *testing.T) {
 	ctx := NewContext(r, w, app)
 	q, err := ctx.Query("myarray", 2)
 	if err != nil {
-		t.Errorf("Can not retrieve a query.")
+		t.Errorf("Could not retrieve a query.")
 	}
 	if q != "value3" {
-		t.Errorf("Can not correctly retrive a query.")
+		t.Errorf("Could not correctly retrive a query.")
 	}
 }
 
@@ -119,7 +185,7 @@ func TestQueryNotFound(t *testing.T) {
 	ctx := NewContext(r, w, app)
 	q, err := ctx.Query("query")
 	if err == nil || q != "" {
-		t.Errorf("Can not raise error when query not found.")
+		t.Errorf("Could not raise error when query not found.")
 	}
 }
 
@@ -138,7 +204,7 @@ func TestRedirection(t *testing.T) {
 	ctx.Redirect("/foo")
 	ctx.Send()
 	if w.HeaderMap.Get("Location") != `/foo` {
-		t.Errorf("Can not perform a 301 redirection.")
+		t.Errorf("Could not perform a 301 redirection.")
 	}
 }
 
@@ -157,7 +223,7 @@ func TestAbort(t *testing.T) {
 	ctx := NewContext(r, w, app)
 	ctx.Abort(500)
 	if w.Code != 500 || !ctx.IsSent {
-		t.Errorf("Can not abort a context.")
+		t.Errorf("Could not abort a context.")
 	}
 }
 
@@ -182,7 +248,7 @@ func TestRenderFromString(t *testing.T) {
 		ctx.RenderFromString(c.src, c.args)
 		ctx.Send()
 		if w.Body.String() != c.output {
-			t.Errorf("Can not render from string correctly: %v != %v", w.Body.String(), c.output)
+			t.Errorf("Could not render from string correctly: %v != %v", w.Body.String(), c.output)
 		}
 	}
 }
@@ -206,7 +272,7 @@ func TestJSON(t *testing.T) {
 		ctx.JSON(c.input)
 		ctx.Send()
 		if w.Body.String() != c.output {
-			t.Errorf("Can not return JSON correctly: %v != %v", w.Body.String(), c.output)
+			t.Errorf("Could not return JSON correctly: %v != %v", w.Body.String(), c.output)
 		}
 		if w.HeaderMap.Get("Content-Type") != `application/json` {
 			t.Errorf("Content-Type didn't set properly when calling Context.JSON.")
