@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type SessionManager interface {
 // MemorySessionManager is a implementation of Session Manager, which stores data in memory.
 type MemorySessionManager struct {
 	sessions map[string]*MemorySession
+	lock     sync.RWMutex
 }
 
 // NewMemorySessionManager creates a new session manager.
@@ -57,7 +59,9 @@ func (mgr *MemorySessionManager) NewSession() (Session, error) {
 		return nil, err
 	}
 	s := MemorySession{sid: sid, data: make(map[string]interface{}), createdAt: time.Now()}
+	mgr.lock.RLock()
 	mgr.sessions[sid] = &s
+	mgr.lock.RUnlock()
 	return &s, nil
 }
 
