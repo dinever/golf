@@ -74,7 +74,7 @@ color: #ff8a00;
       <div id="header">
         <div class="container">
           <div id="title">
-            <h1>Error: 500 Internal Server Error</h1>
+            <h1>Error: {{ .Code }} {{ .Title }}</h1>
           </div>
         </div>
       </div>

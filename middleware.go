@@ -53,8 +53,8 @@ func XSRFProtectionMiddleware(next Handler) Handler {
 	fn := func(ctx *Context) {
 		xsrfEnabled, _ := ctx.App.Config.GetBool("xsrf_cookies", false)
 		if xsrfEnabled && (ctx.Request.Method == "POST" || ctx.Request.Method == "PUT" || ctx.Request.Method == "DELETE") {
-			if !checkXSRFToken(ctx) {
-				ctx.App.handleError(ctx, 403)
+			if !ctx.checkXSRFToken() {
+				ctx.Abort(403)
 				return
 			}
 		}

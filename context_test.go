@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"encoding/hex"
 )
 
 func makeTestHTTPRequest(body io.Reader, method, url string) *http.Request {
@@ -176,6 +177,34 @@ func TestXSRFProtectionDisabled(t *testing.T) {
 
 	if w.Body.String() != "success" {
 		t.Errorf("Did not returned expected result.")
+	}
+}
+
+func TestXSRFProtection(t *testing.T) {
+	_, app, r, w := makeTestContext("GET", "/login/")
+	app.Config.Set("xsrf_cookies", true)
+	app.MiddlewareChain = NewChain(XSRFProtectionMiddleware)
+	var expectedToken string
+	app.Get("/login/", func(ctx *Context) {
+		expectedToken = ctx.xsrfToken()
+		ctx.Write("success")
+	})
+	app.Post("/login/", func(ctx *Context) {
+		ctx.Write("success")
+	})
+	app.ServeHTTP(w, r)
+
+	_, tokenBytes := decodeXSRFToken(expectedToken)
+	maskBytes := randomBytes(4)
+	maskedTokenBytes := append(maskBytes, websocketMask(maskBytes, tokenBytes)...)
+	maskedToken := hex.EncodeToString(maskedTokenBytes)
+
+	_, _, r, w = makeTestContext("POST", "/login/")
+	r.AddCookie(&http.Cookie{Name: "_xsrf", Value: expectedToken})
+	r.Form.Add("xsrf_token", maskedToken)
+	app.ServeHTTP(w, r)
+	if w.Code != 200 {
+		t.Errorf("Should not raise XSRF error when token is matched.")
 	}
 }
 
