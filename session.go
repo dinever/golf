@@ -18,6 +18,7 @@ type SessionManager interface {
 	NewSession() (Session, error)
 	Session(string) (Session, error)
 	GarbageCollection()
+	Count() int
 }
 
 // MemorySessionManager is a implementation of Session Manager, which stores data in memory.
