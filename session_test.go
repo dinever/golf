@@ -2,9 +2,10 @@ package Golf
 
 import (
 	"testing"
+	"time"
 )
 
-func TestMemorySession(t *testing.T) {
+func TestMemorySessionCRUD(t *testing.T) {
 	cases := []struct {
 		key, value string
 	}{
@@ -46,5 +47,29 @@ func TestMemorySessionManager(t *testing.T) {
 	newSession, _ := mgr.Session(sid)
 	if newSession.SessionID() != s.SessionID() {
 		t.Errorf("Memory session manager could not retrieve a previously generated session.")
+	}
+}
+
+func TestMemorySessionExpire(t *testing.T) {
+	mgr := NewMemorySessionManager()
+	sid, _ := mgr.sessionID()
+	s := MemorySession{sid: sid, data: make(map[string]interface{}), createdAt: time.Now().AddDate(0, 0, -1)}
+	mgr.sessions[sid] = &s
+	mgr.GarbageCollection()
+	_, err := mgr.Session(sid)
+	if err == nil {
+		t.Errorf("Could not correctly recycle expired sessions.")
+	}
+}
+
+func TestMemorySessionNotExpire(t *testing.T) {
+	mgr := NewMemorySessionManager()
+	sid, _ := mgr.sessionID()
+	s := MemorySession{sid: sid, data: make(map[string]interface{}), createdAt: time.Now()}
+	mgr.sessions[sid] = &s
+	mgr.GarbageCollection()
+	_, err := mgr.Session(sid)
+	if err != nil {
+		t.Errorf("Falsely recycled non-expired sessions.")
 	}
 }

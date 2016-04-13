@@ -4,15 +4,19 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"time"
 )
 
 const sessionIDLength = 64
+const sessionExpireTime = 3600
+const gcTimeInterval = 30
 
 // SessionManager manages a map of sessions.
 type SessionManager interface {
 	sessionID() (string, error)
 	NewSession() (Session, error)
 	Session(string) (Session, error)
+	GarbageCollection()
 }
 
 // MemorySessionManager is a implementation of Session Manager, which stores data in memory.
@@ -24,6 +28,7 @@ type MemorySessionManager struct {
 func NewMemorySessionManager() *MemorySessionManager {
 	mgr := new(MemorySessionManager)
 	mgr.sessions = make(map[string]*MemorySession)
+	mgr.GarbageCollection()
 	return mgr
 }
 
@@ -39,6 +44,7 @@ func (mgr *MemorySessionManager) sessionID() (string, error) {
 // Session gets the session instance by indicating a session id.
 func (mgr *MemorySessionManager) Session(sid string) (Session, error) {
 	if s, ok := mgr.sessions[sid]; ok {
+		s.createdAt = time.Now()
 		return s, nil
 	}
 	return nil, fmt.Errorf("Can not retrieve session with id %s.", sid)
@@ -50,9 +56,19 @@ func (mgr *MemorySessionManager) NewSession() (Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := MemorySession{sid: sid, data: make(map[string]interface{})}
+	s := MemorySession{sid: sid, data: make(map[string]interface{}), createdAt: time.Now()}
 	mgr.sessions[sid] = &s
 	return &s, nil
+}
+
+// GarbageCollection recycles expired sessions, delete them from the session manager.
+func (mgr *MemorySessionManager) GarbageCollection() {
+	for k, v := range mgr.sessions {
+		if v.isExpired() {
+			delete(mgr.sessions, k)
+		}
+	}
+	time.AfterFunc(time.Duration(gcTimeInterval)*time.Second, mgr.GarbageCollection)
 }
 
 // Session is an interface for session instance, a session instance contains
@@ -62,12 +78,18 @@ type Session interface {
 	Get(key string) (interface{}, error)
 	Delete(key string) error
 	SessionID() string
+	isExpired() bool
 }
 
 // MemorySession is an memory based implementaion of Session.
 type MemorySession struct {
-	sid  string
-	data map[string]interface{}
+	sid       string
+	data      map[string]interface{}
+	createdAt time.Time
+}
+
+func (s *MemorySession) isExpired() bool {
+	return (s.createdAt.Unix() + sessionExpireTime) <= time.Now().Unix()
 }
 
 // Set method sets the key value pair in the session.
