@@ -194,7 +194,7 @@ func TestXSRFProtection(t *testing.T) {
 	})
 	app.ServeHTTP(w, r)
 
-	_, tokenBytes := decodeXSRFToken(expectedToken)
+	_, tokenBytes, _ := decodeXSRFToken(expectedToken)
 	maskBytes := randomBytes(4)
 	maskedTokenBytes := append(maskBytes, websocketMask(maskBytes, tokenBytes)...)
 	maskedToken := hex.EncodeToString(maskedTokenBytes)

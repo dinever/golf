@@ -18,7 +18,7 @@ func TestRandomBytes(t *testing.T) {
 func TestDecodeXSRF(t *testing.T) {
 	maskedToken := newXSRFToken()
 	maskedTokenBytes, _ := hex.DecodeString(maskedToken)
-	mask, token := decodeXSRFToken(maskedToken)
+	mask, token, _ := decodeXSRFToken(maskedToken)
 	if !compareToken(maskedTokenBytes, append(mask, websocketMask(mask, token)...)) {
 		t.Errorf("Could not genearte correct XSRF token. %v != %v")
 	}
