@@ -193,8 +193,8 @@ func (ctx *Context) checkXSRFToken() bool {
 	if token == "" {
 		return false
 	}
-	_, tokenA := decodeXSRFToken(token)
-	_, tokenB := decodeXSRFToken(ctx.getRawXSRFToken())
+	_, tokenA, _ := decodeXSRFToken(token)
+	_, tokenB, _ := decodeXSRFToken(ctx.getRawXSRFToken())
 	return compareToken(tokenA, tokenB)
 }
 
@@ -204,7 +204,12 @@ func (ctx *Context) xsrfToken() string {
 		maskedToken = newXSRFToken()
 		ctx.SetCookie("_xsrf", maskedToken, 3600)
 	}
-	_, tokenBytes := decodeXSRFToken(maskedToken)
+	_, tokenBytes, err := decodeXSRFToken(maskedToken)
+	if err != nil {
+		maskedToken = newXSRFToken()
+		ctx.SetCookie("_xsrf", maskedToken, 3600)
+		_, tokenBytes, _ = decodeXSRFToken(maskedToken)
+	}
 	maskBytes := randomBytes(4)
 	maskedTokenBytes := append(maskBytes, websocketMask(maskBytes, tokenBytes)...)
 	return hex.EncodeToString(maskedTokenBytes)

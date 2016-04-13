@@ -17,14 +17,14 @@ func randomBytes(strlen int) []byte {
 	return result
 }
 
-func decodeXSRFToken(maskedToken string) ([]byte, []byte) {
+func decodeXSRFToken(maskedToken string) ([]byte, []byte, error) {
 	maskedTokenBytes, err := hex.DecodeString(maskedToken)
 	if err != nil {
-		return nil, nil
+		return nil, nil, err
 	}
 	mask := maskedTokenBytes[0:4]
 	token := websocketMask(mask, maskedTokenBytes[4:])
-	return mask, token
+	return mask, token, nil
 }
 
 func websocketMask(mask, data []byte) []byte {
