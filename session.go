@@ -78,6 +78,10 @@ func (mgr *MemorySessionManager) GarbageCollection() {
 	time.AfterFunc(time.Duration(gcTimeInterval)*time.Second, mgr.GarbageCollection)
 }
 
+func (mgr *MemorySessionManager) Count() int {
+	return len(mgr.sessions)
+}
+
 // Session is an interface for session instance, a session instance contains
 // data needed.
 type Session interface {
