@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"time"
+	"fmt"
 )
 
 // Context is a wrapper of http.Request and http.ResponseWriter.
@@ -217,6 +218,9 @@ func (ctx *Context) xsrfToken() string {
 
 // Render a template file using the built-in Go template engine.
 func (ctx *Context) Render(file string, data ...map[string]interface{}) {
+	if ctx.templateLoader == "" {
+		panic(fmt.Errorf("Template loader has not been set."))
+	}
 	var renderData map[string]interface{}
 	if len(data) == 0 {
 		renderData = make(map[string]interface{})
