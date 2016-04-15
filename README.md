@@ -5,7 +5,7 @@
 [![Build Status](http://img.shields.io/travis/dinever/golf.svg?style=flat-square)](https://travis-ci.org/dinever/golf) 
 [![Coverage Status](http://img.shields.io/coveralls/dinever/golf.svg?style=flat-square)](https://coveralls.io/r/dinever/golf?branch=master)
 
-A web framework in Go.
+A fast, simple and lightweight micro-web framework for Go, comes with powerful features and has no dependencies other than the Go Standard Library.
 
 Homepage: [golf.readme.io](https://golf.readme.io/)
 
