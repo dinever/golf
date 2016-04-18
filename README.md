@@ -13,6 +13,37 @@ Homepage: [golf.readme.io](https://golf.readme.io/)
 
     go get github.com/dinever/golf
 
+## Features
+
+1. Dead simple template inheritance with `extends` and `include` helper comes out of box.
+
+    **layout.html**
+    
+    ```html
+    <h1>Hello World</h1>
+    {{ template "body" }}
+    {{ include "sidebar.html" }}
+    ```
+    
+    **index.html**
+
+    ```jinja2
+    {{ extends "layout.html" }}
+    
+    {{ define "body"}}
+    <p>Main content</p>
+    {{ end }}
+    ```
+    
+    **sidebar.html**
+    
+    ```jinja2
+    <p>Sidebar content</p>
+    ```
+2. Built-in XSRF and Session support.
+3. Powerful middleware chain.
+4. Configuration from a JSON file.
+
 ## Hello World
 
 ```go
