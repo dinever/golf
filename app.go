@@ -1,4 +1,4 @@
-package Golf
+package golf
 
 import (
 	"net/http"
@@ -67,12 +67,12 @@ func (app *Application) handler(ctx *Context) {
 		}
 	}
 
-	params, handler := app.router.match(ctx.Request.URL.Path, ctx.Request.Method)
-	if handler != nil {
+	handler, params, err := app.router.FindRoute(ctx.Request.Method, ctx.Request.URL.Path)
+	if err != nil {
+		app.handleError(ctx, 404)
+	} else {
 		ctx.Params = params
 		handler(ctx)
-	} else {
-		app.handleError(ctx, 404)
 	}
 	ctx.Send()
 }
@@ -112,22 +112,22 @@ func (app *Application) Static(url string, path string) {
 
 // Get method is used for registering a Get method route
 func (app *Application) Get(pattern string, handler Handler) {
-	app.router.get(pattern, handler)
+	app.router.AddRoute("GET", pattern, handler)
 }
 
 // Post method is used for registering a Post method route
 func (app *Application) Post(pattern string, handler Handler) {
-	app.router.post(pattern, handler)
+	app.router.AddRoute("POST", pattern, handler)
 }
 
 // Put method is used for registering a Put method route
 func (app *Application) Put(pattern string, handler Handler) {
-	app.router.put(pattern, handler)
+	app.router.AddRoute("PUT", pattern, handler)
 }
 
 // Delete method is used for registering a Delete method route
 func (app *Application) Delete(pattern string, handler Handler) {
-	app.router.delete(pattern, handler)
+	app.router.AddRoute("DELETE", pattern, handler)
 }
 
 // Error method is used for registering an handler for a specified HTTP error code.

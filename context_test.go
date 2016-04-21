@@ -1,7 +1,8 @@
-package Golf
+package golf
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,7 +10,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"encoding/hex"
 )
 
 func makeTestHTTPRequest(body io.Reader, method, url string) *http.Request {

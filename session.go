@@ -1,4 +1,4 @@
-package Golf
+package golf
 
 import (
 	"crypto/rand"

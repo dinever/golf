@@ -1,23 +1,23 @@
 package golf
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
 
 type Node struct {
-	text    string
-	names   map[string]int
-	handler Handler
+	text     string
+	names    map[string]int
+	handler  Handler
 
 	parent   *Node
-	wildcard *Node
 	colon    *Node
 
-	nodes   nodes
-	start   byte
-	max     byte
-	indices []uint8
+	children nodes
+	start    byte
+	max      byte
+	indices  []uint8
 }
 
 type nodes []*Node
@@ -36,13 +36,6 @@ func (s nodes) Less(i, j int) bool {
 
 func (n *Node) matchNode(path string) (*Node, int8, int) {
 
-	if path == "*" {
-		if n.wildcard == nil {
-			n.wildcard = &Node{text: "*"}
-		}
-		return n.wildcard, 0, 0
-	}
-
 	if path == ":" {
 		if n.colon == nil {
 			n.colon = &Node{text: ":"}
@@ -50,7 +43,7 @@ func (n *Node) matchNode(path string) (*Node, int8, int) {
 		return n.colon, 0, 0
 	}
 
-	for i, node := range n.nodes {
+	for i, node := range n.children {
 		if node.text[0] == path[0] {
 
 			maxLength := len(node.text)
@@ -66,10 +59,10 @@ func (n *Node) matchNode(path string) (*Node, int8, int) {
 
 			for j := 0; j < maxLength; j++ {
 				if path[j] != node.text[j] {
-					ccNode := &Node{text: path[0:j], nodes: nodes{node, &Node{text: path[j:]}}}
+					ccNode := &Node{text: path[0:j], children: nodes{node, &Node{text: path[j:]}}}
 					node.text = node.text[j:]
-					n.nodes[i] = ccNode
-					return ccNode.nodes[1], 0, i
+					n.children[i] = ccNode
+					return ccNode.children[1], 0, i
 				}
 			}
 
@@ -93,7 +86,7 @@ func (n *Node) addRoute(parts []string, names map[string]int, handler Handler) {
 	for loop == true {
 		if currentNode == nil {
 			currentNode = &Node{text: parts[0]}
-			n.nodes = append(n.nodes, currentNode)
+			n.children = append(n.children, currentNode)
 		} else if result == 1 {
 			//
 			parts[0] = parts[0][len(currentNode.text):]
@@ -104,8 +97,8 @@ func (n *Node) addRoute(parts []string, names map[string]int, handler Handler) {
 		} else if result == -1 {
 			tmpNode := &Node{text: parts[0]}
 			currentNode.text = currentNode.text[len(tmpNode.text):]
-			tmpNode.nodes = nodes{currentNode}
-			n.nodes[i] = tmpNode
+			tmpNode.children = nodes{currentNode}
+			n.children[i] = tmpNode
 			currentNode = tmpNode
 		}
 		break
@@ -120,26 +113,23 @@ func (n *Node) addRoute(parts []string, names map[string]int, handler Handler) {
 	currentNode.addRoute(parts[1:], names, handler)
 }
 
-func (n *Node) findRoute(urlPath string) (*Node, int) {
+func (n *Node) findRoute(urlPath string) (*Node, error) {
 
 	urlByte := urlPath[0]
 	pathLen := len(urlPath)
 
 	if urlByte >= n.start && urlByte <= n.max {
 		if i := n.indices[urlByte-n.start]; i != 0 {
-			matched := n.nodes[i-1]
+			matched := n.children[i-1]
 			nodeLen := len(matched.text)
 			if nodeLen < pathLen {
 				if matched.text == urlPath[:nodeLen] {
-					if matched, wildcard := matched.findRoute(urlPath[nodeLen:]); matched != nil {
-						return matched, wildcard
+					if matched, _ := matched.findRoute(urlPath[nodeLen:]); matched != nil {
+						return matched, nil
 					}
 				}
 			} else if matched.text == urlPath {
-				if matched.handler == nil && matched.wildcard != nil {
-					return matched.wildcard, 0
-				}
-				return matched, 0
+				return matched, nil
 			}
 		}
 	}
@@ -147,34 +137,30 @@ func (n *Node) findRoute(urlPath string) (*Node, int) {
 	if n.colon != nil && pathLen != 0 {
 		i := strings.IndexByte(urlPath, '/')
 		if i > 0 {
-			if cNode, wildcard := n.colon.findRoute(urlPath[i:]); cNode != nil {
-				return cNode, wildcard
+			if cNode, err := n.colon.findRoute(urlPath[i:]); cNode != nil {
+				return cNode, err
 			}
 		} else if n.colon.handler != nil {
-			return n.colon, 0
+			return n.colon, nil
 		}
 	}
 
-	if n.wildcard != nil {
-		return n.wildcard, pathLen
-	}
-
-	return nil, 0
+	return nil, fmt.Errorf("Can not find route")
 }
 
 func (n *Node) optimizeRoutes() {
 
-	if len(n.nodes) > 0 {
-		sort.Sort(n.nodes)
+	if len(n.children) > 0 {
+		sort.Sort(n.children)
 		for i := 0; i < len(n.indices); i++ {
 			n.indices[i] = 0
 		}
 
-		n.start = n.nodes[0].text[0]
-		n.max = n.nodes[len(n.nodes)-1].text[0]
+		n.start = n.children[0].text[0]
+		n.max = n.children[len(n.children)-1].text[0]
 
-		for i := 0; i < len(n.nodes); i++ {
-			cNode := n.nodes[i]
+		for i := 0; i < len(n.children); i++ {
+			cNode := n.children[i]
 			cNode.parent = n
 
 			cByte := int(cNode.text[0] - n.start)
@@ -190,49 +176,38 @@ func (n *Node) optimizeRoutes() {
 		n.colon.parent = n
 		n.colon.optimizeRoutes()
 	}
-
-	if n.wildcard != nil {
-		n.wildcard.parent = n
-		n.wildcard.optimizeRoutes()
-	}
 }
 
-func (_node *Node) finalize() {
-	if len(_node.nodes) > 0 {
-		for i := 0; i < len(_node.nodes); i++ {
-			_node.nodes[i].finalize()
+func (n *Node) finalize() {
+	if len(n.children) > 0 {
+		for i := 0; i < len(n.children); i++ {
+			n.children[i].finalize()
 		}
 	}
-	if _node.colon != nil {
-		_node.colon.finalize()
+	if n.colon != nil {
+		n.colon.finalize()
 	}
-	if _node.wildcard != nil {
-		_node.wildcard.finalize()
-	}
-	*_node = Node{}
+	*n = Node{}
 }
 
-func (_node *Node) string(col int) string {
-	var str = "\n" + strings.Repeat(" ", col) + _node.text + " -> "
-	col += len(_node.text) + 4
-	for i := 0; i < len(_node.indices); i++ {
-		if j := _node.indices[i]; j != 0 {
-			str += _node.nodes[j-1].string(col)
+func (n *Node) string(col int) string {
+	var str = "\n" + strings.Repeat(" ", col) + n.text + " -> "
+	col += len(n.text) + 4
+	for i := 0; i < len(n.indices); i++ {
+		if j := n.indices[i]; j != 0 {
+			str += n.children[j-1].string(col)
 		}
 	}
-	if _node.colon != nil {
-		str += _node.colon.string(col)
-	}
-	if _node.wildcard != nil {
-		str += _node.wildcard.string(col)
+	if n.colon != nil {
+		str += n.colon.string(col)
 	}
 	return str
 }
 
-func (_node *Node) String() string {
-	if _node.text == "" {
-		return _node.string(0)
+func (n *Node) String() string {
+	if n.text == "" {
+		return n.string(0)
 	}
-	col := len(_node.text) + 4
-	return _node.text + " -> " + _node.string(col)
+	col := len(n.text) + 4
+	return n.text + " -> " + n.string(col)
 }
