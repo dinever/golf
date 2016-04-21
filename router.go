@@ -72,7 +72,7 @@ func (router *router) Finalize() {
 	}
 }
 
-func (router *router) FindRoute(method string, path string) (handlerFunc, Parameter, error) {
+func (router *router) FindRoute(method string, path string) (HandlerFunc, Parameter, error) {
 	node := router.trees[method]
 	if node == nil {
 		return nil, Parameter{}, fmt.Errorf("Can not find route")
@@ -84,7 +84,7 @@ func (router *router) FindRoute(method string, path string) (handlerFunc, Parame
 	return matchedNode.handler, Parameter{Node: matchedNode, path: path}, err
 }
 
-func (router *router) AddRoute(method string, path string, handler handlerFunc) {
+func (router *router) AddRoute(method string, path string, handler HandlerFunc) {
 	var (
 		rootNode *Node
 		ok       bool

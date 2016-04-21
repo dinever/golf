@@ -27,7 +27,7 @@ type Application struct {
 	SessionManager SessionManager
 
 	// NotFoundHandler handles requests when no route is matched.
-	NotFoundHandler Handler
+	NotFoundHandler HandlerFunc
 
 	errorHandler map[int]ErrorHandlerType
 
@@ -117,22 +117,22 @@ func (app *Application) Static(url string, path string) {
 }
 
 // Get method is used for registering a Get method route
-func (app *Application) Get(pattern string, handler handlerFunc) {
+func (app *Application) Get(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("GET", pattern, handler)
 }
 
 // Post method is used for registering a Post method route
-func (app *Application) Post(pattern string, handler handlerFunc) {
+func (app *Application) Post(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("POST", pattern, handler)
 }
 
 // Put method is used for registering a Put method route
-func (app *Application) Put(pattern string, handler handlerFunc) {
+func (app *Application) Put(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("PUT", pattern, handler)
 }
 
 // Delete method is used for registering a Delete method route
-func (app *Application) Delete(pattern string, handler handlerFunc) {
+func (app *Application) Delete(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("DELETE", pattern, handler)
 }
 
