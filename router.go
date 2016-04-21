@@ -2,7 +2,6 @@ package golf
 
 import (
 	"fmt"
-	"strings"
 )
 
 // Handler is the type of the handler function that Golf accepts.
@@ -107,8 +106,8 @@ func (router *router) String() string {
 
 //Parameter holds the parameters matched in the route
 type Parameter struct {
-	*Node        // matched node
-	path  string // url path given
+	*Node         // matched node
+	path   string // url path given
 	cached map[string]string
 }
 
@@ -125,6 +124,15 @@ func (p *Parameter) ByName(name string) (string, error) {
 	return "", fmt.Errorf("Parameter not found")
 }
 
+func lastIndexByte(s string, c byte) int {
+	for i := len(s) - 1; i >= 0; i-- {
+		if s[i] == c {
+			return i
+		}
+	}
+	return -1
+}
+
 //findParam walks up the matched node looking for parameters returns the last parameter
 func (p *Parameter) findParam(idx int) (string, error) {
 	index := len(p.names) - 1
@@ -134,7 +142,7 @@ func (p *Parameter) findParam(idx int) (string, error) {
 
 	for node != nil {
 		if node.text[0] == ':' {
-			ctn := strings.LastIndexByte(urlPath, '/')
+			ctn := lastIndexByte(urlPath, '/')
 			if ctn == -1 {
 				return "", fmt.Errorf("Parameter not found")
 			}

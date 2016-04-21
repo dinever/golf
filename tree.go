@@ -7,12 +7,12 @@ import (
 )
 
 type Node struct {
-	text     string
-	names    map[string]int
-	handler  Handler
+	text    string
+	names   map[string]int
+	handler Handler
 
-	parent   *Node
-	colon    *Node
+	parent *Node
+	colon  *Node
 
 	children nodes
 	start    byte
