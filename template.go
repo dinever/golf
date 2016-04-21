@@ -46,7 +46,7 @@ func (loader *MapLoader) LoadTemplate(name string) (string, error) {
 	if src, ok := (*loader)[name]; ok {
 		return src, nil
 	}
-	return "", Errorf("Could not find template " + name)
+	return "", fmt.Errorf("Could not find template " + name)
 }
 
 // TemplateManager handles the template loader and stores the function map.
@@ -72,7 +72,7 @@ func (t *TemplateManager) Render(w io.Writer, name string, data interface{}) err
 	}
 
 	if tpl == nil {
-		return Errorf("Nil template named %s", name)
+		return fmt.Errorf("Nil template named %s", name)
 	}
 
 	err = tpl.Execute(w, data)
@@ -125,7 +125,7 @@ func (t *TemplateManager) getSrc(name string) (string, error) {
 	}
 
 	if len(tplSrc) < 1 {
-		return "", Errorf("Empty Template named %s", name)
+		return "", fmt.Errorf("Empty Template named %s", name)
 	}
 	return tplSrc, nil
 }

@@ -70,7 +70,7 @@ func (router *router) Finalize() {
 	}
 }
 
-func (router *router) FindRoute(method string, path string) (Handler, Parameter, error) {
+func (router *router) FindRoute(method string, path string) (handlerFunc, Parameter, error) {
 	node := router.trees[method]
 	if node == nil {
 		return nil, Parameter{}, fmt.Errorf("Can not find route")
@@ -82,7 +82,7 @@ func (router *router) FindRoute(method string, path string) (Handler, Parameter,
 	return matchedNode.handler, Parameter{Node: matchedNode, path: path}, err
 }
 
-func (router *router) AddRoute(method string, path string, handler Handler) {
+func (router *router) AddRoute(method string, path string, handler handlerFunc) {
 	var (
 		rootNode *Node
 		ok       bool
@@ -117,7 +117,7 @@ func (p *Parameter) Len() int {
 }
 
 //ByName returns the url parameter by name
-func (p *Parameter) ByName(name string) (string, error) {
+func (p *Parameter) Get(name string) (string, error) {
 	if i, has := p.names[name]; has {
 		return p.findParam(i)
 	}

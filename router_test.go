@@ -2,6 +2,8 @@ package golf
 
 import (
 	"testing"
+	"net/http"
+	"golang.org/x/net/context"
 )
 
 func assertStringEqual(t *testing.T, expected, got string) {
@@ -47,7 +49,7 @@ var githubAPI = []route{
 	{"GET", "/users/:user/received_events/public", "/users/dinever/received_events/public", nil},
 }
 
-func handler(ctx *Context) {
+func handler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func TestRouter(t *testing.T) {
@@ -63,13 +65,13 @@ func TestRouter(t *testing.T) {
 		}
 
 		for key, expected := range route.params {
-			val, err := param.ByName(key)
+			val, err := param.Get(key)
 			if err != nil {
 				t.Errorf("Can not retrieve parameter from route %v: %v", route.testPath, key)
 			} else {
 				assertStringEqual(t, expected, val)
 			}
-			val, err = param.ByName(key)
+			val, err = param.Get(key)
 			if err != nil {
 				t.Errorf("Can not retrieve parameter from route %v: %v", route.testPath, key)
 			} else {

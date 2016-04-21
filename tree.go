@@ -9,7 +9,7 @@ import (
 type Node struct {
 	text    string
 	names   map[string]int
-	handler Handler
+	handler handlerFunc
 
 	parent *Node
 	colon  *Node
@@ -73,17 +73,16 @@ func (n *Node) matchNode(path string) (*Node, int8, int) {
 	return nil, 0, 0
 }
 
-func (n *Node) addRoute(parts []string, names map[string]int, handler Handler) {
+func (n *Node) addRoute(parts []string, names map[string]int, handler handlerFunc) {
 
 	var (
 		tmpNode     *Node
 		currentNode *Node
-		loop        = true
 	)
 
 	currentNode, result, i := n.matchNode(parts[0])
 
-	for loop == true {
+	for {
 		if currentNode == nil {
 			currentNode = &Node{text: parts[0]}
 			n.children = append(n.children, currentNode)
