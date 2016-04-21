@@ -2,10 +2,12 @@ package golf
 
 import (
 	"fmt"
+	"golang.org/x/net/context"
+	"net/http"
 )
 
-// Handler is the type of the handler function that Golf accepts.
-type Handler func(ctx *Context)
+// HandlerFunc is the type of the handler function that Golf accepts.
+type HandlerFunc func(c context.Context, w http.ResponseWriter, r *http.Request)
 
 // ErrorHandlerType is the type of the function that handles error in Golf.
 type ErrorHandlerType func(ctx *Context, data ...map[string]interface{})

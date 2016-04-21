@@ -9,8 +9,6 @@ import (
 	"sync"
 )
 
-type handlerFunc func(c context.Context, w http.ResponseWriter, r *http.Request)
-
 // Application is an abstraction of a Golf application, can be used for
 // configuration, etc.
 type Application struct {

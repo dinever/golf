@@ -1,9 +1,9 @@
 package golf
 
 import (
-	"testing"
-	"net/http"
 	"golang.org/x/net/context"
+	"net/http"
+	"testing"
 )
 
 func assertStringEqual(t *testing.T, expected, got string) {
