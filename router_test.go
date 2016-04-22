@@ -108,17 +108,20 @@ func TestIncorrectPath(t *testing.T) {
 }
 
 func TestPathNotFound(t *testing.T) {
-	path := map[string]string {
-		"/users/name/": "/users/name/dinever/",
+	path := []struct {
+		method, path, incomingMethod, incomingPath string
+	} {
+		{"GET", "/users/name/", "GET", "/users/name/dinever/"},
+		{"GET", "/dinever/repo/", "POST", "/dinever/repo/"},
 	}
 	defer func() {
 		if err := recover(); err != nil {
 		}
 	}()
 	router := newRouter()
-	for route, wrongPath := range path {
-		router.AddRoute("GET", route, handler)
-		h, p, err := router.FindRoute("GET", wrongPath)
+	for _, path := range path {
+		router.AddRoute(path.method, path.path, handler)
+		h, p, err := router.FindRoute(path.incomingMethod, path.incomingPath)
 		if h != nil {
 			t.Errorf("Should return nil handler when path not found.")
 		}
