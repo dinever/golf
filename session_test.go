@@ -73,3 +73,19 @@ func TestMemorySessionNotExpire(t *testing.T) {
 		t.Errorf("Falsely recycled non-expired sessions.")
 	}
 }
+
+func TestMemorySessionCount(t *testing.T) {
+	mgr := NewMemorySessionManager()
+	for i := 0; i < 100; i++ {
+		sid, _ := mgr.sessionID()
+		s := MemorySession{sid: sid, data: make(map[string]interface{}), createdAt: time.Now().AddDate(0, 0, -1)}
+		mgr.sessions[sid] = &s
+	}
+	if mgr.Count() != 100 {
+		t.Errorf("Could not correctly get session count: %v != %v", mgr.Count(), 100)
+	}
+	mgr.GarbageCollection()
+	if mgr.Count() != 0 {
+		t.Errorf("Could not correctly get session count after GC: %v != %v", mgr.Count(), 0)
+	}
+}

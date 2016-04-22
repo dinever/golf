@@ -110,7 +110,7 @@ func TestIncorrectPath(t *testing.T) {
 func TestPathNotFound(t *testing.T) {
 	path := []struct {
 		method, path, incomingMethod, incomingPath string
-	} {
+	}{
 		{"GET", "/users/name/", "GET", "/users/name/dinever/"},
 		{"GET", "/dinever/repo/", "POST", "/dinever/repo/"},
 	}

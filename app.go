@@ -48,7 +48,7 @@ func New() *Application {
 	app.router = newRouter()
 	app.staticRouter = make(map[string][]string)
 	app.View = NewView()
-	app.Config = NewConfig(app)
+	app.Config = NewConfig()
 	// debug, _ := app.Config.GetBool("debug", false)
 	app.errorHandler = make(map[int]ErrorHandlerFunc)
 	app.MiddlewareChain = NewChain()
