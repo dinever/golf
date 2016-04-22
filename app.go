@@ -96,6 +96,7 @@ func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		app.handlerChain = app.MiddlewareChain.Final(app.handler)
 	}
 	ctx := app.pool.Get().(*Context)
+	ctx.reset()
 	ctx.Request = req
 	ctx.Response = res
 	ctx.App = app

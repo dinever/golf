@@ -60,6 +60,11 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 	return ctx
 }
 
+func (ctx *Context) reset() {
+	ctx.StatusCode = 200
+	ctx.IsSent = false
+}
+
 func (ctx *Context) generateSession() Session {
 	s, err := ctx.App.SessionManager.NewSession()
 	if err != nil {
