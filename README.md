@@ -74,6 +74,14 @@ func main() {
 
 The website will be available at http://localhost:9000.
 
+## Benchmark
+
+The following chart shows the benchmark performance of Golf compared with others.
+
+![Golf benchmark](https://cloud.githubusercontent.com/assets/1311594/14748305/fcbdc216-0886-11e6-90a4-231e78acfb60.png)
+
+For more information, please see [BENCHMARKING.md](BENCHMARKING.md)
+
 ## Docs
 
 [golf.readme.io/docs](https://golf.readme.io/docs)
