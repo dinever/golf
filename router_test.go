@@ -31,6 +31,7 @@ type route struct {
 var githubAPI = []route{
 	// OAuth Authorizations
 	{"GET", "/authorizations", "/authorizations", map[string]string{}},
+	{"GET", "/auth", "/auth", map[string]string{}},
 	{"GET", "/authorizations/:id", "/authorizations/12345", map[string]string{"id": "12345"}},
 	{"POST", "/authorizations", "/authorizations", map[string]string{}},
 	{"DELETE", "/authorizations/:id", "/authorizations/12345", map[string]string{"id": "12345"}},
