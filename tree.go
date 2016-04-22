@@ -6,13 +6,13 @@ import (
 	"strings"
 )
 
-type Node struct {
-	text     string
-	names    map[string]int
-	handler  HandlerFunc
+type node struct {
+	text    string
+	names   map[string]int
+	handler HandlerFunc
 
-	parent   *Node
-	colon    *Node
+	parent *node
+	colon  *node
 
 	children nodes
 	start    byte
@@ -20,7 +20,7 @@ type Node struct {
 	indices  []uint8
 }
 
-type nodes []*Node
+type nodes []*node
 
 func (s nodes) Len() int {
 	return len(s)
@@ -34,19 +34,19 @@ func (s nodes) Less(i, j int) bool {
 	return s[i].text[0] < s[j].text[0]
 }
 
-func (n *Node) matchNode(path string) (*Node, int8, int) {
+func (n *node) matchNode(path string) (*node, int8, int) {
 
 	if path == ":" {
 		if n.colon == nil {
-			n.colon = &Node{text: ":"}
+			n.colon = &node{text: ":"}
 		}
 		return n.colon, 0, 0
 	}
 
-	for i, node := range n.children {
-		if node.text[0] == path[0] {
+	for i, child := range n.children {
+		if child.text[0] == path[0] {
 
-			maxLength := len(node.text)
+			maxLength := len(child.text)
 			pathLength := len(path)
 			var pathCompare int8
 
@@ -58,26 +58,26 @@ func (n *Node) matchNode(path string) (*Node, int8, int) {
 			}
 
 			for j := 0; j < maxLength; j++ {
-				if path[j] != node.text[j] {
-					ccNode := &Node{text: path[0:j], children: nodes{node, &Node{text: path[j:]}}}
-					node.text = node.text[j:]
+				if path[j] != child.text[j] {
+					ccNode := &node{text: path[0:j], children: nodes{child, &node{text: path[j:]}}}
+					child.text = child.text[j:]
 					n.children[i] = ccNode
 					return ccNode.children[1], 0, i
 				}
 			}
 
-			return node, pathCompare, i
+			return child, pathCompare, i
 		}
 	}
 
 	return nil, 0, 0
 }
 
-func (n *Node) addRoute(parts []string, names map[string]int, handler HandlerFunc) {
+func (n *node) addRoute(parts []string, names map[string]int, handler HandlerFunc) {
 
 	var (
-		tmpNode     *Node
-		currentNode *Node
+		tmpNode     *node
+		currentNode *node
 		loop        = true
 	)
 
@@ -85,7 +85,7 @@ func (n *Node) addRoute(parts []string, names map[string]int, handler HandlerFun
 
 	for loop == true {
 		if currentNode == nil {
-			currentNode = &Node{text: parts[0]}
+			currentNode = &node{text: parts[0]}
 			n.children = append(n.children, currentNode)
 		} else if result == 1 {
 			//
@@ -95,7 +95,7 @@ func (n *Node) addRoute(parts []string, names map[string]int, handler HandlerFun
 			currentNode = tmpNode
 			continue
 		} else if result == -1 {
-			tmpNode := &Node{text: parts[0]}
+			tmpNode := &node{text: parts[0]}
 			currentNode.text = currentNode.text[len(tmpNode.text):]
 			tmpNode.children = nodes{currentNode}
 			n.children[i] = tmpNode
@@ -113,7 +113,7 @@ func (n *Node) addRoute(parts []string, names map[string]int, handler HandlerFun
 	currentNode.addRoute(parts[1:], names, handler)
 }
 
-func (n *Node) findRoute(urlPath string) (*Node, error) {
+func (n *node) findRoute(urlPath string) (*node, error) {
 
 	urlByte := urlPath[0]
 	pathLen := len(urlPath)
@@ -148,7 +148,7 @@ func (n *Node) findRoute(urlPath string) (*Node, error) {
 	return nil, fmt.Errorf("Can not find route")
 }
 
-func (n *Node) optimizeRoutes() {
+func (n *node) optimizeRoutes() {
 
 	if len(n.children) > 0 {
 		sort.Sort(n.children)
@@ -178,7 +178,7 @@ func (n *Node) optimizeRoutes() {
 	}
 }
 
-func (n *Node) finalize() {
+func (n *node) finalize() {
 	if len(n.children) > 0 {
 		for i := 0; i < len(n.children); i++ {
 			n.children[i].finalize()
@@ -187,10 +187,10 @@ func (n *Node) finalize() {
 	if n.colon != nil {
 		n.colon.finalize()
 	}
-	*n = Node{}
+	*n = node{}
 }
 
-func (n *Node) string(col int) string {
+func (n *node) string(col int) string {
 	var str = "\n" + strings.Repeat(" ", col) + n.text + " -> "
 	col += len(n.text) + 4
 	for i := 0; i < len(n.indices); i++ {
@@ -204,7 +204,7 @@ func (n *Node) string(col int) string {
 	return str
 }
 
-func (n *Node) String() string {
+func (n *node) String() string {
 	if n.text == "" {
 		return n.string(0)
 	}

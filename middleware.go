@@ -25,11 +25,10 @@ func NewChain(handlerArray ...middlewareHandler) *Chain {
 // Final indicates a final Handler, chain the multiple middlewares together with the
 // handler, and return them together as a handler.
 func (c Chain) Final(fn HandlerFunc) HandlerFunc {
-	final := fn
 	for i := len(c.middlewareHandlers) - 1; i >= 0; i-- {
-		final = c.middlewareHandlers[i](final)
+		fn = c.middlewareHandlers[i](fn)
 	}
-	return final
+	return fn
 }
 
 // Append a middleware to the middleware chain
@@ -86,6 +85,7 @@ func RecoverMiddleware(next HandlerFunc) HandlerFunc {
 	return fn
 }
 
+// SessionMiddleware handles session of the request
 func SessionMiddleware(next HandlerFunc) HandlerFunc {
 	fn := func(ctx *Context) {
 		if ctx.App.SessionManager != nil {

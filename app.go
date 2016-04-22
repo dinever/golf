@@ -11,33 +11,35 @@ import (
 // Application is an abstraction of a Golf application, can be used for
 // configuration, etc.
 type Application struct {
-	router              *router
+	router *router
 
 	// A map of string slices as value to indicate the static files.
-	staticRouter        map[string][]string
+	staticRouter map[string][]string
 
 	// The View model of the application. View handles the templating and page
 	// rendering.
-	View                *View
+	View *View
 
 	// Config provides configuration management.
-	Config              *Config
+	Config *Config
 
-	SessionManager      SessionManager
+	SessionManager SessionManager
 
 	// NotFoundHandler handles requests when no route is matched.
-	NotFoundHandler     HandlerFunc
+	NotFoundHandler HandlerFunc
 
 	// MiddlewareChain is the default middlewares that Golf uses.
-	MiddlewareChain     *Chain
+	MiddlewareChain *Chain
 
 	pool sync.Pool
 
-	errorHandler        map[int]ErrorHandlerFunc
+	errorHandler map[int]ErrorHandlerFunc
 
 	// The default error handler, if the corresponding error code is not specified
 	// in the `errorHandler` map, this handler will be called.
 	DefaultErrorHandler ErrorHandlerFunc
+
+	handlerChain HandlerFunc
 }
 
 // New is used for creating a new Golf Application instance.
@@ -90,12 +92,14 @@ func staticHandler(ctx *Context, filePath string) {
 
 // Basic entrance of an `http.ResponseWriter` and an `http.Request`.
 func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	// ctx := NewContext(req, res, app)
+	if app.handlerChain == nil {
+		app.handlerChain = app.MiddlewareChain.Final(app.handler)
+	}
 	ctx := app.pool.Get().(*Context)
 	ctx.Request = req
 	ctx.Response = res
 	ctx.App = app
-	app.MiddlewareChain.Final(app.handler)(ctx)
+	app.handlerChain(ctx)
 	app.pool.Put(ctx)
 }
 

@@ -4,18 +4,18 @@ import (
 	"fmt"
 )
 
-// Handler is the type of the handler function that Golf accepts.
+// HandlerFunc is the type of the handler function that Golf accepts.
 type HandlerFunc func(ctx *Context)
 
-// ErrorHandlerType is the type of the function that handles error in Golf.
+// ErrorHandlerFunc is the type of the function that handles error in Golf.
 type ErrorHandlerFunc func(ctx *Context, data ...map[string]interface{})
 
 type router struct {
-	trees map[string]*Node
+	trees map[string]*node
 }
 
 func newRouter() *router {
-	return &router{trees: make(map[string]*Node)}
+	return &router{trees: make(map[string]*node)}
 }
 
 func splitURLpath(path string) (parts []string, names map[string]int) {
@@ -79,17 +79,17 @@ func (router *router) FindRoute(method string, path string) (HandlerFunc, Parame
 	if err != nil {
 		return nil, Parameter{}, err
 	}
-	return matchedNode.handler, Parameter{Node: matchedNode, path: path}, err
+	return matchedNode.handler, Parameter{node: matchedNode, path: path}, err
 }
 
 func (router *router) AddRoute(method string, path string, handler HandlerFunc) {
 	var (
-		rootNode *Node
+		rootNode *node
 		ok       bool
 	)
 	parts, names := splitURLpath(path)
 	if rootNode, ok = router.trees[method]; !ok {
-		rootNode = &Node{}
+		rootNode = &node{}
 		router.trees[method] = rootNode
 	}
 	rootNode.addRoute(parts, names, handler)
@@ -106,7 +106,7 @@ func (router *router) String() string {
 
 //Parameter holds the parameters matched in the route
 type Parameter struct {
-	*Node         // matched node
+	*node         // matched node
 	path   string // url path given
 	cached map[string]string
 }
@@ -138,7 +138,7 @@ func (p *Parameter) findParam(idx int) (string, error) {
 	index := len(p.names) - 1
 	urlPath := p.path
 	pathLen := len(p.path)
-	node := p.Node
+	node := p.node
 
 	for node != nil {
 		if node.text[0] == ':' {
