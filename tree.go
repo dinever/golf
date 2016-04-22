@@ -177,37 +177,3 @@ func (n *node) optimizeRoutes() {
 		n.colon.optimizeRoutes()
 	}
 }
-
-func (n *node) finalize() {
-	if len(n.children) > 0 {
-		for i := 0; i < len(n.children); i++ {
-			n.children[i].finalize()
-		}
-	}
-	if n.colon != nil {
-		n.colon.finalize()
-	}
-	*n = node{}
-}
-
-func (n *node) string(col int) string {
-	var str = "\n" + strings.Repeat(" ", col) + n.text + " -> "
-	col += len(n.text) + 4
-	for i := 0; i < len(n.indices); i++ {
-		if j := n.indices[i]; j != 0 {
-			str += n.children[j-1].string(col)
-		}
-	}
-	if n.colon != nil {
-		str += n.colon.string(col)
-	}
-	return str
-}
-
-func (n *node) String() string {
-	if n.text == "" {
-		return n.string(0)
-	}
-	col := len(n.text) + 4
-	return n.text + " -> " + n.string(col)
-}

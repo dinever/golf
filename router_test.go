@@ -94,3 +94,14 @@ func TestSplitURLPath(t *testing.T) {
 		assertSliceEqual(t, parts, result[0])
 	}
 }
+
+func TestIncorrectPath(t *testing.T) {
+	path := "/users/foo:name/"
+	defer func() {
+		if err := recover(); err != nil {
+		}
+	}()
+	router := newRouter()
+	router.AddRoute("GET", path, handler)
+	t.Errorf("Incorrect path should raise an error.")
+}

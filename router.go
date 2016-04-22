@@ -44,7 +44,7 @@ func splitURLpath(path string) (parts []string, names map[string]int) {
 		} else {
 			if path[i] == ':' || path[i] == '*' {
 				if path[i-1] != '/' {
-					panic(fmt.Errorf("Inválid parameter : or * comes anwais after / - %q", path))
+					panic(fmt.Errorf("Invalid parameter : or * should always be after / - %q", path))
 				}
 				nameidx = i + 1
 				if partidx != i {
@@ -62,12 +62,6 @@ func splitURLpath(path string) (parts []string, names map[string]int) {
 		parts = append(parts, path[partidx:])
 	}
 	return
-}
-
-func (router *router) Finalize() {
-	for _, _node := range router.trees {
-		_node.finalize()
-	}
 }
 
 func (router *router) FindRoute(method string, path string) (HandlerFunc, Parameter, error) {
@@ -94,14 +88,6 @@ func (router *router) AddRoute(method string, path string, handler HandlerFunc) 
 	}
 	rootNode.addRoute(parts, names, handler)
 	rootNode.optimizeRoutes()
-}
-
-func (router *router) String() string {
-	var lines string
-	for method, _node := range router.trees {
-		lines += method + " " + _node.String()
-	}
-	return lines
 }
 
 //Parameter holds the parameters matched in the route
