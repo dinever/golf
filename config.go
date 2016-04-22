@@ -1,4 +1,4 @@
-package Golf
+package golf
 
 import (
 	"encoding/json"
@@ -38,61 +38,61 @@ type Config struct {
 }
 
 // NewConfig creates a new configuration instance.
-func NewConfig(app *Application) *Config {
+func NewConfig() *Config {
 	mapping := make(map[string]interface{})
 	return &Config{mapping}
 }
 
 // GetString fetches the string value by indicating the key.
 // It returns a ValueTypeError if the value is not a sring.
-func (config *Config) GetString(key string, defaultValue interface{}) (string, error) {
+func (config *Config) GetString(key string, defaultValue string) (string, error) {
 	value, err := config.Get(key, defaultValue)
 	if err != nil {
-		return "", err
+		return defaultValue, err
 	}
 	if result, ok := value.(string); ok {
 		return result, nil
 	}
-	return "", &ValueTypeError{key: key, value: value, message: "Value is not a string."}
+	return defaultValue, &ValueTypeError{key: key, value: value, message: "Value is not a string."}
 }
 
 // GetInt fetches the int value by indicating the key.
 // It returns a ValueTypeError if the value is not a sring.
-func (config *Config) GetInt(key string, defaultValue interface{}) (int, error) {
+func (config *Config) GetInt(key string, defaultValue int) (int, error) {
 	value, err := config.Get(key, defaultValue)
 	if err != nil {
-		return 0, err
+		return defaultValue, err
 	}
 	if result, ok := value.(int); ok {
 		return result, nil
 	}
-	return 0, &ValueTypeError{key: key, value: value, message: "Value is not an integer."}
+	return defaultValue, &ValueTypeError{key: key, value: value, message: "Value is not an integer."}
 }
 
 // GetBool fetches the bool value by indicating the key.
 // It returns a ValueTypeError if the value is not a sring.
-func (config *Config) GetBool(key string, defaultValue interface{}) (bool, error) {
+func (config *Config) GetBool(key string, defaultValue bool) (bool, error) {
 	value, err := config.Get(key, defaultValue)
 	if err != nil {
-		return false, err
+		return defaultValue, err
 	}
 	if result, ok := value.(bool); ok {
 		return result, nil
 	}
-	return false, &ValueTypeError{key: key, value: value, message: "Value is not an bool."}
+	return defaultValue, &ValueTypeError{key: key, value: value, message: "Value is not an bool."}
 }
 
 // GetFloat fetches the float value by indicating the key.
 // It returns a ValueTypeError if the value is not a sring.
-func (config *Config) GetFloat(key string, defaultValue interface{}) (float64, error) {
+func (config *Config) GetFloat(key string, defaultValue float64) (float64, error) {
 	value, err := config.Get(key, defaultValue)
 	if err != nil {
-		return 0, err
+		return defaultValue, err
 	}
 	if result, ok := value.(float64); ok {
 		return result, nil
 	}
-	return 0, &ValueTypeError{key: key, value: value, message: "Value is not a float."}
+	return defaultValue, &ValueTypeError{key: key, value: value, message: "Value is not a float."}
 }
 
 // Set is used to set the value by indicating the key.
@@ -151,7 +151,7 @@ func (config *Config) Get(key string, defaultValue interface{}) (interface{}, er
 			if value, exists := mapping[item]; exists {
 				tmp = value
 			} else if defaultValue != nil {
-				return defaultValue, nil
+				return nil, &KeyError{key: path.Join(append(keys[:i], item)...)}
 			} else {
 				return nil, &KeyError{key: path.Join(append(keys[:i], item)...)}
 			}

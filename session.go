@@ -1,4 +1,4 @@
-package Golf
+package golf
 
 import (
 	"crypto/rand"
@@ -79,6 +79,7 @@ func (mgr *MemorySessionManager) GarbageCollection() {
 	time.AfterFunc(time.Duration(gcTimeInterval)*time.Second, mgr.GarbageCollection)
 }
 
+// Count returns the number of the current session stored in the session manager.
 func (mgr *MemorySessionManager) Count() int {
 	return len(mgr.sessions)
 }

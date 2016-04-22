@@ -1,4 +1,4 @@
-package Golf
+package golf
 
 import (
 	"encoding/hex"
@@ -19,7 +19,8 @@ func TestDecodeXSRF(t *testing.T) {
 	maskedToken := newXSRFToken()
 	maskedTokenBytes, _ := hex.DecodeString(maskedToken)
 	mask, token, _ := decodeXSRFToken(maskedToken)
-	if !compareToken(maskedTokenBytes, append(mask, websocketMask(mask, token)...)) {
-		t.Errorf("Could not genearte correct XSRF token. %v != %v")
+	result := append(mask, websocketMask(mask, token)...)
+	if !compareToken(maskedTokenBytes, result) {
+		t.Errorf("Could not genearte correct XSRF token. %v != %v", maskedTokenBytes, result)
 	}
 }

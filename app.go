@@ -1,10 +1,11 @@
-package Golf
+package golf
 
 import (
 	"net/http"
 	"os"
 	"path"
 	"strings"
+	"sync"
 )
 
 // Application is an abstraction of a Golf application, can be used for
@@ -25,16 +26,20 @@ type Application struct {
 	SessionManager SessionManager
 
 	// NotFoundHandler handles requests when no route is matched.
-	NotFoundHandler Handler
+	NotFoundHandler HandlerFunc
 
 	// MiddlewareChain is the default middlewares that Golf uses.
 	MiddlewareChain *Chain
 
-	errorHandler map[int]ErrorHandlerType
+	pool sync.Pool
+
+	errorHandler map[int]ErrorHandlerFunc
 
 	// The default error handler, if the corresponding error code is not specified
 	// in the `errorHandler` map, this handler will be called.
-	DefaultErrorHandler ErrorHandlerType
+	DefaultErrorHandler ErrorHandlerFunc
+
+	handlerChain HandlerFunc
 }
 
 // New is used for creating a new Golf Application instance.
@@ -43,11 +48,14 @@ func New() *Application {
 	app.router = newRouter()
 	app.staticRouter = make(map[string][]string)
 	app.View = NewView()
-	app.Config = NewConfig(app)
+	app.Config = NewConfig()
 	// debug, _ := app.Config.GetBool("debug", false)
-	app.errorHandler = make(map[int]ErrorHandlerType)
-	app.MiddlewareChain = NewChain(defaultMiddlewares...)
+	app.errorHandler = make(map[int]ErrorHandlerFunc)
+	app.MiddlewareChain = NewChain()
 	app.DefaultErrorHandler = defaultErrorHandler
+	app.pool.New = func() interface{} {
+		return new(Context)
+	}
 	return app
 }
 
@@ -67,12 +75,12 @@ func (app *Application) handler(ctx *Context) {
 		}
 	}
 
-	params, handler := app.router.match(ctx.Request.URL.Path, ctx.Request.Method)
-	if handler != nil {
+	handler, params, err := app.router.FindRoute(ctx.Request.Method, ctx.Request.URL.Path)
+	if err != nil {
+		app.handleError(ctx, 404)
+	} else {
 		ctx.Params = params
 		handler(ctx)
-	} else {
-		app.handleError(ctx, 404)
 	}
 	ctx.Send()
 }
@@ -84,8 +92,16 @@ func staticHandler(ctx *Context, filePath string) {
 
 // Basic entrance of an `http.ResponseWriter` and an `http.Request`.
 func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	ctx := NewContext(req, res, app)
-	app.MiddlewareChain.Final(app.handler)(ctx)
+	if app.handlerChain == nil {
+		app.handlerChain = app.MiddlewareChain.Final(app.handler)
+	}
+	ctx := app.pool.Get().(*Context)
+	ctx.reset()
+	ctx.Request = req
+	ctx.Response = res
+	ctx.App = app
+	app.handlerChain(ctx)
+	app.pool.Put(ctx)
 }
 
 // Run the Golf Application.
@@ -111,27 +127,42 @@ func (app *Application) Static(url string, path string) {
 }
 
 // Get method is used for registering a Get method route
-func (app *Application) Get(pattern string, handler Handler) {
-	app.router.get(pattern, handler)
+func (app *Application) Get(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("GET", pattern, handler)
 }
 
 // Post method is used for registering a Post method route
-func (app *Application) Post(pattern string, handler Handler) {
-	app.router.post(pattern, handler)
+func (app *Application) Post(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("POST", pattern, handler)
 }
 
 // Put method is used for registering a Put method route
-func (app *Application) Put(pattern string, handler Handler) {
-	app.router.put(pattern, handler)
+func (app *Application) Put(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("PUT", pattern, handler)
 }
 
 // Delete method is used for registering a Delete method route
-func (app *Application) Delete(pattern string, handler Handler) {
-	app.router.delete(pattern, handler)
+func (app *Application) Delete(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("DELETE", pattern, handler)
+}
+
+// Patch method is used for registering a Patch method route
+func (app *Application) Patch(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("PATCH", pattern, handler)
+}
+
+// Options method is used for registering a Options method route
+func (app *Application) Options(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("OPTIONS", pattern, handler)
+}
+
+// Head method is used for registering a Head method route
+func (app *Application) Head(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("HEAD", pattern, handler)
 }
 
 // Error method is used for registering an handler for a specified HTTP error code.
-func (app *Application) Error(statusCode int, handler ErrorHandlerType) {
+func (app *Application) Error(statusCode int, handler ErrorHandlerFunc) {
 	app.errorHandler[statusCode] = handler
 }
 

@@ -1,12 +1,12 @@
-package Golf
+package golf
 
 import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
-	"fmt"
 )
 
 // Context is a wrapper of http.Request and http.ResponseWriter.
@@ -18,7 +18,7 @@ type Context struct {
 	Response http.ResponseWriter
 
 	// URL Parameter
-	Params map[string]string
+	Params Parameter
 
 	// HTTP status code
 	StatusCode int
@@ -60,6 +60,11 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 	return ctx
 }
 
+func (ctx *Context) reset() {
+	ctx.StatusCode = 200
+	ctx.IsSent = false
+}
+
 func (ctx *Context) generateSession() Session {
 	s, err := ctx.App.SessionManager.NewSession()
 	if err != nil {
@@ -98,10 +103,8 @@ func (ctx *Context) Query(key string, index ...int) (string, error) {
 // Param method retrieves the parameters from url
 // If the url is /:id/, then id can be retrieved by calling `ctx.Param(id)`
 func (ctx *Context) Param(key string) (string, error) {
-	if val, ok := ctx.Params[key]; ok {
-		return val, nil
-	}
-	return "", errors.New("Parameter not found.")
+	val, err := ctx.Params.ByName(key)
+	return val, err
 }
 
 // Redirect method sets the response as a 301 redirection.

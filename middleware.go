@@ -1,4 +1,4 @@
-package Golf
+package golf
 
 import (
 	"log"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type middlewareHandler func(next Handler) Handler
+type middlewareHandler func(next HandlerFunc) HandlerFunc
 
 var defaultMiddlewares = []middlewareHandler{LoggingMiddleware, RecoverMiddleware, XSRFProtectionMiddleware, SessionMiddleware}
 
@@ -24,12 +24,11 @@ func NewChain(handlerArray ...middlewareHandler) *Chain {
 
 // Final indicates a final Handler, chain the multiple middlewares together with the
 // handler, and return them together as a handler.
-func (c Chain) Final(fn Handler) Handler {
-	final := fn
+func (c Chain) Final(fn HandlerFunc) HandlerFunc {
 	for i := len(c.middlewareHandlers) - 1; i >= 0; i-- {
-		final = c.middlewareHandlers[i](final)
+		fn = c.middlewareHandlers[i](fn)
 	}
-	return final
+	return fn
 }
 
 // Append a middleware to the middleware chain
@@ -38,7 +37,7 @@ func (c *Chain) Append(fn middlewareHandler) {
 }
 
 // LoggingMiddleware is the built-in middleware for logging.
-func LoggingMiddleware(next Handler) Handler {
+func LoggingMiddleware(next HandlerFunc) HandlerFunc {
 	fn := func(ctx *Context) {
 		t1 := time.Now()
 		next(ctx)
@@ -49,7 +48,7 @@ func LoggingMiddleware(next Handler) Handler {
 }
 
 // XSRFProtectionMiddleware is the built-in middleware for XSRF protection.
-func XSRFProtectionMiddleware(next Handler) Handler {
+func XSRFProtectionMiddleware(next HandlerFunc) HandlerFunc {
 	fn := func(ctx *Context) {
 		xsrfEnabled, _ := ctx.App.Config.GetBool("xsrf_cookies", false)
 		if xsrfEnabled && (ctx.Request.Method == "POST" || ctx.Request.Method == "PUT" || ctx.Request.Method == "DELETE") {
@@ -64,7 +63,7 @@ func XSRFProtectionMiddleware(next Handler) Handler {
 }
 
 // RecoverMiddleware is the built-in middleware for recovering from errors.
-func RecoverMiddleware(next Handler) Handler {
+func RecoverMiddleware(next HandlerFunc) HandlerFunc {
 	fn := func(ctx *Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -86,7 +85,8 @@ func RecoverMiddleware(next Handler) Handler {
 	return fn
 }
 
-func SessionMiddleware(next Handler) Handler {
+// SessionMiddleware handles session of the request
+func SessionMiddleware(next HandlerFunc) HandlerFunc {
 	fn := func(ctx *Context) {
 		if ctx.App.SessionManager != nil {
 			ctx.retrieveSession()

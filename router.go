@@ -1,103 +1,147 @@
-package Golf
+package golf
 
 import (
-	"regexp"
-	"strings"
+	"fmt"
 )
 
-const (
-	routerMethodGet    = "GET"
-	routerMethodPost   = "POST"
-	routerMethodPut    = "PUT"
-	routerMethodDelete = "DELETE"
-)
+// HandlerFunc is the type of the handler function that Golf accepts.
+type HandlerFunc func(ctx *Context)
+
+// ErrorHandlerFunc is the type of the function that handles error in Golf.
+type ErrorHandlerFunc func(ctx *Context, data ...map[string]interface{})
 
 type router struct {
-	routeSlice []*route
-}
-
-// Handler is the type of the handler function that Golf accepts.
-type Handler func(ctx *Context)
-
-// ErrorHandlerType is the type of the function that handles error in Golf.
-type ErrorHandlerType func(ctx *Context, data ...map[string]interface{})
-
-// ErrorHandler is the type of the error handler function that Golf accepts.
-type ErrorHandler func(ctx *Context, e error)
-
-type route struct {
-	method  string
-	pattern string
-	regex   *regexp.Regexp
-	params  []string
-	handler Handler
+	trees map[string]*node
 }
 
 func newRouter() *router {
-	r := new(router)
-	r.routeSlice = make([]*route, 0)
-	return r
+	return &router{trees: make(map[string]*node)}
 }
 
-func newRoute(method string, pattern string, handler Handler) *route {
-	route := new(route)
-	route.pattern = pattern
-	route.params = make([]string, 0)
-	route.regex, route.params = route.parseURL(pattern)
-	route.method = method
-	route.handler = handler
-	return route
-}
+func splitURLpath(path string) (parts []string, names map[string]int) {
 
-func (router *router) get(pattern string, handler Handler) {
-	route := newRoute(routerMethodGet, pattern, handler)
-	router.registerRoute(route, handler)
-}
+	var (
+		nameidx      = -1
+		partidx      int
+		paramCounter int
+	)
 
-func (router *router) post(pattern string, handler Handler) {
-	route := newRoute(routerMethodPost, pattern, handler)
-	router.registerRoute(route, handler)
-}
+	for i := 0; i < len(path); i++ {
 
-func (router *router) put(pattern string, handler Handler) {
-	route := newRoute(routerMethodPut, pattern, handler)
-	router.registerRoute(route, handler)
-}
+		if names == nil {
+			names = make(map[string]int)
+		}
+		// recording name
+		if nameidx != -1 {
+			//found /
+			if path[i] == '/' {
+				names[path[nameidx:i]] = paramCounter
+				paramCounter++
 
-func (router *router) delete(pattern string, handler Handler) {
-	route := newRoute(routerMethodDelete, pattern, handler)
-	router.registerRoute(route, handler)
-}
-
-func (router *router) registerRoute(route *route, handler Handler) {
-	router.routeSlice = append(router.routeSlice, route)
-}
-
-func (router *router) match(url string, method string) (params map[string]string, handler Handler) {
-	params = make(map[string]string)
-	for _, route := range router.routeSlice {
-		if method == route.method && route.regex.MatchString(url) {
-			subMatch := route.regex.FindStringSubmatch(url)
-			for i, param := range route.params {
-				params[param] = subMatch[i+1]
+				nameidx = -1 // switch to normal recording
+				partidx = i
 			}
-			handler = route.handler
-			return params, handler
+		} else {
+			if path[i] == ':' || path[i] == '*' {
+				if path[i-1] != '/' {
+					panic(fmt.Errorf("Invalid parameter : or * should always be after / - %q", path))
+				}
+				nameidx = i + 1
+				if partidx != i {
+					parts = append(parts, path[partidx:i])
+				}
+				parts = append(parts, path[i:nameidx])
+			}
 		}
 	}
-	return nil, nil
+
+	if nameidx != -1 {
+		names[path[nameidx:]] = paramCounter
+		paramCounter++
+	} else if partidx < len(path) {
+		parts = append(parts, path[partidx:])
+	}
+	return
 }
 
-// Parse the URL to a regexp and a map of parameters
-func (route *route) parseURL(pattern string) (regex *regexp.Regexp, params []string) {
-	params = make([]string, 0)
-	segments := strings.Split(pattern, "/")
-	for i, segment := range segments {
-		if strings.HasPrefix(segment, ":") {
-			segments[i] = `([\w-%]+)`
-			params = append(params, strings.TrimPrefix(segment, ":"))
+func (router *router) FindRoute(method string, path string) (HandlerFunc, Parameter, error) {
+	node := router.trees[method]
+	if node == nil {
+		return nil, Parameter{}, fmt.Errorf("Can not find route")
+	}
+	matchedNode, err := node.findRoute(path)
+	if err != nil {
+		return nil, Parameter{}, err
+	}
+	return matchedNode.handler, Parameter{node: matchedNode, path: path}, err
+}
+
+func (router *router) AddRoute(method string, path string, handler HandlerFunc) {
+	var (
+		rootNode *node
+		ok       bool
+	)
+	parts, names := splitURLpath(path)
+	if rootNode, ok = router.trees[method]; !ok {
+		rootNode = &node{}
+		router.trees[method] = rootNode
+	}
+	rootNode.addRoute(parts, names, handler)
+	rootNode.optimizeRoutes()
+}
+
+//Parameter holds the parameters matched in the route
+type Parameter struct {
+	*node         // matched node
+	path   string // url path given
+	cached map[string]string
+}
+
+//Len returns number arguments matched in the provided URL
+func (p *Parameter) Len() int {
+	return len(p.names)
+}
+
+//ByName returns the url parameter by name
+func (p *Parameter) ByName(name string) (string, error) {
+	if i, has := p.names[name]; has {
+		return p.findParam(i)
+	}
+	return "", fmt.Errorf("Parameter not found")
+}
+
+func lastIndexByte(s string, c byte) int {
+	for i := len(s) - 1; i >= 0; i-- {
+		if s[i] == c {
+			return i
 		}
 	}
-	regex, _ = regexp.Compile("^" + strings.Join(segments, "/") + "$")
-	return regex, params
+	return -1
+}
+
+//findParam walks up the matched node looking for parameters returns the last parameter
+func (p *Parameter) findParam(idx int) (string, error) {
+	index := len(p.names) - 1
+	urlPath := p.path
+	pathLen := len(p.path)
+	node := p.node
+
+	for node != nil {
+		if node.text[0] == ':' {
+			ctn := lastIndexByte(urlPath, '/')
+			if ctn == -1 {
+				return "", fmt.Errorf("Parameter not found")
+			}
+			pathLen = ctn + 1
+			if index == idx {
+				return urlPath[pathLen:], nil
+			}
+			index--
+		} else {
+			pathLen -= len(node.text)
+		}
+		urlPath = urlPath[0:pathLen]
+		node = node.parent
+	}
+	return "", fmt.Errorf("Parameter not found")
 }

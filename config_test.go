@@ -1,4 +1,4 @@
-package Golf
+package golf
 
 import (
 	"bytes"
@@ -22,8 +22,7 @@ func TestConfig(t *testing.T) {
 	defaultValue := "None"
 
 	for _, c := range cases {
-		app := New()
-		config := NewConfig(app)
+		config := NewConfig()
 		config.Set(c.key, c.value)
 
 		value, err := config.Get(c.key, defaultValue)
@@ -46,8 +45,7 @@ func TestConfigWithMultipleEntires(t *testing.T) {
 		{"foo2", "bar4"},
 	}
 
-	app := New()
-	config := NewConfig(app)
+	config := NewConfig()
 
 	for _, c := range settings {
 		config.Set(c.key, c.value)
@@ -78,5 +76,93 @@ func TestFromJSON(t *testing.T) {
 	}
 	if value != "bar" {
 		t.Errorf("expected value to be abc but it was %v", value)
+	}
+}
+
+func TestGetStringException(t *testing.T) {
+	defaultValue := "None"
+
+	config := NewConfig()
+	config.Set("foo", 123)
+	val, err := config.GetString("foo", defaultValue)
+	if err == nil {
+		t.Errorf("Should have raised an type error when getting a non-string value by GetString.")
+	}
+	if val != defaultValue {
+		t.Errorf("Should have used the default value when raising an error.")
+	}
+
+	val, err = config.GetString("bar", defaultValue)
+	if err == nil {
+		t.Errorf("Should have raised an type error when getting a non-existed value by GetString.")
+	}
+	if val != defaultValue {
+		t.Errorf("Should have used the default value when raising an error.")
+	}
+}
+
+func TestGetIntegerException(t *testing.T) {
+	defaultValue := 123
+
+	config := NewConfig()
+	config.Set("foo", "bar")
+	val, err := config.GetInt("foo", defaultValue)
+	if err == nil {
+		t.Errorf("Should have raised an type error when getting a non-string value by GetString.")
+	}
+	if val != defaultValue {
+		t.Errorf("Should have used the default value when raising an error.")
+	}
+
+	val, err = config.GetInt("bar", defaultValue)
+	if err == nil {
+		t.Errorf("Should have raised an type error when getting a non-existed value by GetString.")
+	}
+	if val != defaultValue {
+		t.Errorf("Should have used the default value when raising an error.")
+	}
+}
+
+func TestGetBoolException(t *testing.T) {
+	defaultValue := false
+
+	config := NewConfig()
+	config.Set("foo", "bar")
+	val, err := config.GetBool("foo", defaultValue)
+	if err == nil {
+		t.Errorf("Should have raised an type error when getting a non-string value by GetString.")
+	}
+	if val != defaultValue {
+		t.Errorf("Should have used the default value when raising an error.")
+	}
+
+	val, err = config.GetBool("bar", defaultValue)
+	if err == nil {
+		t.Errorf("Should have raised an type error when getting a non-existed value by GetString.")
+	}
+	if val != defaultValue {
+		t.Errorf("Should have used the default value when raising an error.")
+	}
+}
+
+func TestGetFloat64Exception(t *testing.T) {
+	defaultValue := 0.5
+
+	config := NewConfig()
+	config.Set("foo", "bar")
+	val, err := config.GetFloat("foo", defaultValue)
+	if err == nil {
+		t.Errorf("Should have raised an type error when getting a non-string value by GetString.")
+	}
+	if val != defaultValue {
+		t.Errorf("Should have used the default value when raising an error.")
+	}
+
+	val, err = config.GetFloat("bar", defaultValue)
+	if err == nil {
+		t.Errorf("Should have raised an type error when getting a non-existed value by GetString.")
+	}
+	if val != defaultValue {
+		t.Errorf("Should have used the default value when raising an error.")
 	}
 }
