@@ -5,10 +5,10 @@ import (
 )
 
 // Handler is the type of the handler function that Golf accepts.
-type Handler func(ctx *Context)
+type HandlerFunc func(ctx *Context)
 
 // ErrorHandlerType is the type of the function that handles error in Golf.
-type ErrorHandlerType func(ctx *Context, data ...map[string]interface{})
+type ErrorHandlerFunc func(ctx *Context, data ...map[string]interface{})
 
 type router struct {
 	trees map[string]*Node
@@ -70,7 +70,7 @@ func (router *router) Finalize() {
 	}
 }
 
-func (router *router) FindRoute(method string, path string) (Handler, Parameter, error) {
+func (router *router) FindRoute(method string, path string) (HandlerFunc, Parameter, error) {
 	node := router.trees[method]
 	if node == nil {
 		return nil, Parameter{}, fmt.Errorf("Can not find route")
@@ -82,7 +82,7 @@ func (router *router) FindRoute(method string, path string) (Handler, Parameter,
 	return matchedNode.handler, Parameter{Node: matchedNode, path: path}, err
 }
 
-func (router *router) AddRoute(method string, path string, handler Handler) {
+func (router *router) AddRoute(method string, path string, handler HandlerFunc) {
 	var (
 		rootNode *Node
 		ok       bool

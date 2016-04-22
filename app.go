@@ -5,36 +5,39 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 )
 
 // Application is an abstraction of a Golf application, can be used for
 // configuration, etc.
 type Application struct {
-	router *router
+	router              *router
 
 	// A map of string slices as value to indicate the static files.
-	staticRouter map[string][]string
+	staticRouter        map[string][]string
 
 	// The View model of the application. View handles the templating and page
 	// rendering.
-	View *View
+	View                *View
 
 	// Config provides configuration management.
-	Config *Config
+	Config              *Config
 
-	SessionManager SessionManager
+	SessionManager      SessionManager
 
 	// NotFoundHandler handles requests when no route is matched.
-	NotFoundHandler Handler
+	NotFoundHandler     HandlerFunc
 
 	// MiddlewareChain is the default middlewares that Golf uses.
-	MiddlewareChain *Chain
+	MiddlewareChain     *Chain
 
-	errorHandler map[int]ErrorHandlerType
+	pool sync.Pool
+
+	errorHandler        map[int]ErrorHandlerFunc
 
 	// The default error handler, if the corresponding error code is not specified
 	// in the `errorHandler` map, this handler will be called.
-	DefaultErrorHandler ErrorHandlerType
+	DefaultErrorHandler ErrorHandlerFunc
 }
 
 // New is used for creating a new Golf Application instance.
@@ -45,9 +48,12 @@ func New() *Application {
 	app.View = NewView()
 	app.Config = NewConfig(app)
 	// debug, _ := app.Config.GetBool("debug", false)
-	app.errorHandler = make(map[int]ErrorHandlerType)
-	app.MiddlewareChain = NewChain(defaultMiddlewares...)
+	app.errorHandler = make(map[int]ErrorHandlerFunc)
+	app.MiddlewareChain = NewChain()
 	app.DefaultErrorHandler = defaultErrorHandler
+	app.pool.New = func() interface{} {
+		return new(Context)
+	}
 	return app
 }
 
@@ -84,8 +90,13 @@ func staticHandler(ctx *Context, filePath string) {
 
 // Basic entrance of an `http.ResponseWriter` and an `http.Request`.
 func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	ctx := NewContext(req, res, app)
+	// ctx := NewContext(req, res, app)
+	ctx := app.pool.Get().(*Context)
+	ctx.Request = req
+	ctx.Response = res
+	ctx.App = app
 	app.MiddlewareChain.Final(app.handler)(ctx)
+	app.pool.Put(ctx)
 }
 
 // Run the Golf Application.
@@ -111,27 +122,27 @@ func (app *Application) Static(url string, path string) {
 }
 
 // Get method is used for registering a Get method route
-func (app *Application) Get(pattern string, handler Handler) {
+func (app *Application) Get(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("GET", pattern, handler)
 }
 
 // Post method is used for registering a Post method route
-func (app *Application) Post(pattern string, handler Handler) {
+func (app *Application) Post(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("POST", pattern, handler)
 }
 
 // Put method is used for registering a Put method route
-func (app *Application) Put(pattern string, handler Handler) {
+func (app *Application) Put(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("PUT", pattern, handler)
 }
 
 // Delete method is used for registering a Delete method route
-func (app *Application) Delete(pattern string, handler Handler) {
+func (app *Application) Delete(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("DELETE", pattern, handler)
 }
 
 // Error method is used for registering an handler for a specified HTTP error code.
-func (app *Application) Error(statusCode int, handler ErrorHandlerType) {
+func (app *Application) Error(statusCode int, handler ErrorHandlerFunc) {
 	app.errorHandler[statusCode] = handler
 }
 

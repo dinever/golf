@@ -7,12 +7,12 @@ import (
 )
 
 type Node struct {
-	text    string
-	names   map[string]int
-	handler Handler
+	text     string
+	names    map[string]int
+	handler  HandlerFunc
 
-	parent *Node
-	colon  *Node
+	parent   *Node
+	colon    *Node
 
 	children nodes
 	start    byte
@@ -73,7 +73,7 @@ func (n *Node) matchNode(path string) (*Node, int8, int) {
 	return nil, 0, 0
 }
 
-func (n *Node) addRoute(parts []string, names map[string]int, handler Handler) {
+func (n *Node) addRoute(parts []string, names map[string]int, handler HandlerFunc) {
 
 	var (
 		tmpNode     *Node
