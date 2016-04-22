@@ -59,6 +59,11 @@ func New() *Application {
 	return app
 }
 
+// Use appends a middleware to the existing middleware chain.
+func (app *Application) Use(m middlewareHandler) {
+	app.MiddlewareChain.Append(m)
+}
+
 // First search if any of the static route matches the request.
 // If not, look up the URL in the router.
 func (app *Application) handler(ctx *Context) {
