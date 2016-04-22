@@ -2,8 +2,8 @@ package golf
 
 import (
 	"bytes"
-	"testing"
 	"regexp"
+	"testing"
 )
 
 func assertContains(t *testing.T, content string, query string) {
