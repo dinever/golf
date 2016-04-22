@@ -146,6 +146,21 @@ func (app *Application) Delete(pattern string, handler HandlerFunc) {
 	app.router.AddRoute("DELETE", pattern, handler)
 }
 
+// Patch method is used for registering a Patch method route
+func (app *Application) Patch(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("PATCH", pattern, handler)
+}
+
+// Options method is used for registering a Options method route
+func (app *Application) Options(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("OPTIONS", pattern, handler)
+}
+
+// Head method is used for registering a Head method route
+func (app *Application) Head(pattern string, handler HandlerFunc) {
+	app.router.AddRoute("HEAD", pattern, handler)
+}
+
 // Error method is used for registering an handler for a specified HTTP error code.
 func (app *Application) Error(statusCode int, handler ErrorHandlerFunc) {
 	app.errorHandler[statusCode] = handler
