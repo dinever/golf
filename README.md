@@ -15,6 +15,7 @@ Homepage: [golf.readme.io](https://golf.readme.io/)
 
 ## Features
 
+1. No allocation during routing and parameter retrieve.
 1. Dead simple template inheritance with `extends` and `include` helper comes out of box.
 
     **layout.html**
@@ -40,9 +41,9 @@ Homepage: [golf.readme.io](https://golf.readme.io/)
     ```jinja2
     <p>Sidebar content</p>
     ```
-2. Built-in XSRF and Session support.
-3. Powerful middleware chain.
-4. Configuration from a JSON file.
+1. Built-in XSRF and Session support.
+1. Powerful middleware chain.
+1. Configuration from JSON file.
 
 ## Hello World
 
