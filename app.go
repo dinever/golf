@@ -51,7 +51,7 @@ func New() *Application {
 	app.Config = NewConfig()
 	// debug, _ := app.Config.GetBool("debug", false)
 	app.errorHandler = make(map[int]ErrorHandlerFunc)
-	app.MiddlewareChain = NewChain(RecoverMiddleware)
+	app.MiddlewareChain = NewChain()
 	app.DefaultErrorHandler = defaultErrorHandler
 	app.pool.New = func() interface{} {
 		return new(Context)
