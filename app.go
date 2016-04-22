@@ -51,12 +51,17 @@ func New() *Application {
 	app.Config = NewConfig()
 	// debug, _ := app.Config.GetBool("debug", false)
 	app.errorHandler = make(map[int]ErrorHandlerFunc)
-	app.MiddlewareChain = NewChain()
+	app.MiddlewareChain = NewChain(RecoverMiddleware)
 	app.DefaultErrorHandler = defaultErrorHandler
 	app.pool.New = func() interface{} {
 		return new(Context)
 	}
 	return app
+}
+
+// Use appends a middleware to the existing middleware chain.
+func (app *Application) Use(m middlewareHandler) {
+	app.MiddlewareChain.Append(m)
 }
 
 // First search if any of the static route matches the request.

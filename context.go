@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -166,6 +168,35 @@ func (ctx *Context) Send() {
 // Write text on the response body.
 func (ctx *Context) Write(content string) {
 	ctx.Body = []byte(content)
+}
+
+func (c *Context) requestHeader(key string) string {
+	if values, _ := c.Request.Header[key]; len(values) > 0 {
+		return values[0]
+	}
+	return ""
+}
+
+// ClientIP implements a best effort algorithm to return the real client IP, it parses
+// X-Real-IP and X-Forwarded-For in order to work properly with reverse-proxies such us: nginx or haproxy.
+// This method is taken from https://github.com/gin-gonic/gin
+func (ctx *Context) ClientIP() string {
+	clientIP := strings.TrimSpace(ctx.requestHeader("X-Real-Ip"))
+	if len(clientIP) > 0 {
+		return clientIP
+	}
+	clientIP = ctx.requestHeader("X-Forwarded-For")
+	if index := strings.IndexByte(clientIP, ','); index >= 0 {
+		clientIP = clientIP[0:index]
+	}
+	clientIP = strings.TrimSpace(clientIP)
+	if len(clientIP) > 0 {
+		return clientIP
+	}
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(ctx.Request.RemoteAddr)); err == nil {
+		return ip
+	}
+	return ""
 }
 
 // Abort method returns an HTTP Error by indicating the status code, the corresponding

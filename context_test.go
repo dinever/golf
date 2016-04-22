@@ -12,6 +12,36 @@ import (
 	"testing"
 )
 
+func assertEqual(t *testing.T, expected interface{}, actual interface{}) {
+	if expected != actual {
+		t.Errorf("Not equal: %v (expected) != %v (actual)", expected, actual)
+	}
+}
+
+func assertNotEqual(t *testing.T, expected interface{}, actual interface{}) {
+	if expected == actual {
+		t.Errorf("Equal: %v (expected) == %v (actual)", expected, actual)
+	}
+}
+
+func assertDeepEqual(t *testing.T, expected interface{}, actual interface{}) {
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Not equal: %v (expected) != %v (actual)", expected, actual)
+	}
+}
+
+func assertNoError(t *testing.T, err error) {
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func assertError(t *testing.T, err error) {
+	if err == nil {
+		t.Errorf("Should have raised an error")
+	}
+}
+
 func makeTestHTTPRequest(body io.Reader, method, url string) *http.Request {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
@@ -32,9 +62,7 @@ func TestContextCreate(t *testing.T) {
 	w := httptest.NewRecorder()
 	app := New()
 	ctx := NewContext(r, w, app)
-	if ctx == nil {
-		t.Errorf("Could not create context.")
-	}
+	assertNotEqual(t, ctx, nil)
 }
 
 func TestParam(t *testing.T) {
@@ -45,9 +73,8 @@ func TestParam(t *testing.T) {
 		if err != nil {
 			t.Errorf("Could not retrieve parameter.")
 		}
-		if v != "foo" {
-			t.Errorf("Could not retrieve correct parameter.")
-		}
+		assertNoError(t, err)
+		assertEqual(t, v, "foo")
 		ctx.Write("success")
 	})
 	app.ServeHTTP(w, r)
@@ -58,26 +85,14 @@ func TestParamWithMultipleParameters(t *testing.T) {
 	app.MiddlewareChain = NewChain()
 	app.Post("/:user/:repo/", func(ctx *Context) {
 		v, err := ctx.Param("user")
-		if err != nil {
-			t.Errorf("Could not retrieve parameter.")
-		}
-		if v != "dinever" {
-			t.Errorf("Could not retrieve correct parameter. %v != %v", v, "dinever")
-		}
+		assertNoError(t, err)
+		assertEqual(t, v, "dinever")
 		v, err = ctx.Param("repo")
-		if err != nil {
-			t.Errorf("Could not retrieve parameter.")
-		}
-		if v != "golf" {
-			t.Errorf("Could not retrieve correct parameter. %v != %v", v, "golf")
-		}
+		assertNoError(t, err)
+		assertEqual(t, v, "golf")
 		v, err = ctx.Param("org")
-		if err == nil {
-			t.Errorf("Should have returned an error with invalid parameter query.")
-		}
-		if v != "" {
-			t.Errorf("Should have returned an empty string with invalid parameter query.")
-		}
+		assertError(t, err)
+		assertEqual(t, v, "")
 		ctx.Write("success")
 	})
 	app.ServeHTTP(w, r)
@@ -90,9 +105,7 @@ func TestCookieSet(t *testing.T) {
 	ctx := NewContext(r, w, app)
 	ctx.SetCookie("foo", "bar", 0)
 	ctx.Send()
-	if w.HeaderMap.Get("Set-Cookie") != `foo=bar; Path=/` {
-		t.Errorf("Cookie test failed: %q != %q", w.HeaderMap.Get("Set-Cookie"), `foo=bar; Path=/`)
-	}
+	assertEqual(t, w.HeaderMap.Get("Set-Cookie"), `foo=bar; Path=/`)
 }
 
 func TestCookieSetWithExpire(t *testing.T) {
@@ -108,9 +121,7 @@ func TestCookieSetWithExpire(t *testing.T) {
 	if err == nil {
 		cookies := req.Cookies()
 		cookie := cookies[3]
-		if cookie.Value != "3600" {
-			t.Errorf("Could not set cookie with expiration correctly.")
-		}
+		assertEqual(t, cookie.Value, "3600")
 	}
 }
 
@@ -118,15 +129,11 @@ func TestSessionWithInvalidSid(t *testing.T) {
 	ctx, app, r, w := makeTestContext("GET", "/foo/bar/")
 	app.SessionManager = NewMemorySessionManager()
 	ctx.retrieveSession()
-	if ctx.Session == nil {
-		t.Errorf("Could not retrieve session when there is no sid.")
-	}
+	assertNotEqual(t, ctx.Session, nil)
 	r.AddCookie(&http.Cookie{Name: "sid", Value: "abc"})
 	ctx = NewContext(r, w, app)
 	ctx.retrieveSession()
-	if ctx.Session == nil {
-		t.Errorf("Could not retrieve session when sid is not valid.")
-	}
+	assertNotEqual(t, ctx.Session, nil)
 }
 
 func TestSession(t *testing.T) {
@@ -158,9 +165,7 @@ func TestSession(t *testing.T) {
 func TestXSRFProtectionWithoutCookie(t *testing.T) {
 	ctx, app, _, _ := makeTestContext("GET", "/foo/bar/")
 	app.Config.Set("xsrf_cookies", true)
-	if ctx.getRawXSRFToken() != "" {
-		t.Errorf("Should not retrieve raw XSRF token when there is no `_xsrf` cookie set.")
-	}
+	assertEqual(t, ctx.getRawXSRFToken(), "")
 }
 
 func TestXSRFProtectionDisabled(t *testing.T) {
@@ -171,13 +176,8 @@ func TestXSRFProtectionDisabled(t *testing.T) {
 	})
 	app.ServeHTTP(w, r)
 
-	if w.Code == 403 {
-		t.Errorf("Should not check XSRF")
-	}
-
-	if w.Body.String() != "success" {
-		t.Errorf("Did not returned expected result.")
-	}
+	assertNotEqual(t, w.Code, 403)
+	assertEqual(t, w.Body.String(), "success")
 }
 
 func TestXSRFProtection(t *testing.T) {
@@ -203,17 +203,13 @@ func TestXSRFProtection(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: "_xsrf", Value: expectedToken})
 	r.Form.Add("xsrf_token", maskedToken)
 	app.ServeHTTP(w, r)
-	if w.Code != 200 {
-		t.Errorf("Should not raise XSRF error when token is matched.")
-	}
+	assertEqual(t, w.Code, 200)
 }
 
 func TestTemplateLoader(t *testing.T) {
 	ctx, _, _, _ := makeTestContext("GET", "/")
 	ctx.Loader("admin")
-	if ctx.templateLoader != "admin" {
-		t.Errorf("Could not set templateLoader for Context.")
-	}
+	assertEqual(t, ctx.templateLoader, "admin")
 }
 
 func TestQuery(t *testing.T) {
@@ -230,13 +226,8 @@ func TestQuery(t *testing.T) {
 		}
 	}
 	p, err := ctx.Query("p")
-	if err != nil {
-		t.Errorf("Could not retrieve a query.")
-	} else {
-		if p != "bar" {
-			t.Errorf("Could not retrieve the correct query `p`.")
-		}
-	}
+	assertNoError(t, err)
+	assertEqual(t, p, "bar")
 }
 
 func TestQueries(t *testing.T) {
@@ -245,12 +236,8 @@ func TestQueries(t *testing.T) {
 	app := New()
 	ctx := NewContext(r, w, app)
 	q, err := ctx.Query("myarray", 2)
-	if err != nil {
-		t.Errorf("Could not retrieve a query.")
-	}
-	if q != "value3" {
-		t.Errorf("Could not correctly retrive a query.")
-	}
+	assertNoError(t, err)
+	assertEqual(t, q, "value3")
 }
 
 func TestQueryNotFound(t *testing.T) {
@@ -259,9 +246,8 @@ func TestQueryNotFound(t *testing.T) {
 	app := New()
 	ctx := NewContext(r, w, app)
 	q, err := ctx.Query("query")
-	if err == nil || q != "" {
-		t.Errorf("Could not raise error when query not found.")
-	}
+	assertError(t, err)
+	assertEqual(t, q, "")
 }
 
 func makeNewContext(method, url string) *Context {
@@ -278,17 +264,13 @@ func TestRedirection(t *testing.T) {
 	ctx := NewContext(r, w, app)
 	ctx.Redirect("/foo")
 	ctx.Send()
-	if w.HeaderMap.Get("Location") != `/foo` {
-		t.Errorf("Could not perform a 301 redirection.")
-	}
+	assertEqual(t, w.HeaderMap.Get("Location"), `/foo`)
 }
 
 func TestWrite(t *testing.T) {
 	ctx := makeNewContext("GET", "/foo")
 	ctx.Write("hello world")
-	if !reflect.DeepEqual(ctx.Body, []byte("hello world")) {
-		t.Errorf("Context.Write failed.")
-	}
+	assertDeepEqual(t, ctx.Body, []byte("hello world"))
 }
 
 func TestAbort(t *testing.T) {
@@ -300,6 +282,25 @@ func TestAbort(t *testing.T) {
 	if w.Code != 500 || !ctx.IsSent {
 		t.Errorf("Could not abort a context.")
 	}
+}
+
+func TestContextClientIP(t *testing.T) {
+	ctx := makeNewContext("POST", "/")
+	ctx.Request.Header.Set("X-Real-IP", " 10.10.10.10  ")
+	ctx.Request.Header.Set("X-Forwarded-For", "  20.20.20.20, 30.30.30.30")
+	ctx.Request.RemoteAddr = "  40.40.40.40:42123 "
+
+	assertEqual(t, ctx.ClientIP(), "10.10.10.10")
+	assertEqual(t, ctx.ClientIP(), "10.10.10.10")
+
+	ctx.Request.Header.Del("X-Real-IP")
+	assertEqual(t, ctx.ClientIP(), "20.20.20.20")
+
+	ctx.Request.Header.Set("X-Forwarded-For", "30.30.30.30  ")
+	assertEqual(t, ctx.ClientIP(), "30.30.30.30")
+
+	ctx.Request.Header.Del("X-Forwarded-For")
+	assertEqual(t, ctx.ClientIP(), "40.40.40.40")
 }
 
 func TestRenderFromString(t *testing.T) {
@@ -322,9 +323,7 @@ func TestRenderFromString(t *testing.T) {
 		ctx := NewContext(r, w, app)
 		ctx.RenderFromString(c.src, c.args)
 		ctx.Send()
-		if w.Body.String() != c.output {
-			t.Errorf("Could not render from string correctly: %v != %v", w.Body.String(), c.output)
-		}
+		assertEqual(t, w.Body.String(), c.output)
 	}
 }
 
@@ -346,11 +345,7 @@ func TestJSON(t *testing.T) {
 		ctx := NewContext(r, w, app)
 		ctx.JSON(c.input)
 		ctx.Send()
-		if w.Body.String() != c.output {
-			t.Errorf("Could not return JSON correctly: %v != %v", w.Body.String(), c.output)
-		}
-		if w.HeaderMap.Get("Content-Type") != `application/json` {
-			t.Errorf("Content-Type didn't set properly when calling Context.JSON.")
-		}
+		assertEqual(t, w.Body.String(), c.output)
+		assertEqual(t, w.HeaderMap.Get("Content-Type"), `application/json`)
 	}
 }
