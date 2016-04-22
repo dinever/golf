@@ -104,9 +104,9 @@ func (ctx *Context) Query(key string, index ...int) (string, error) {
 
 // Param method retrieves the parameters from url
 // If the url is /:id/, then id can be retrieved by calling `ctx.Param(id)`
-func (ctx *Context) Param(key string) (string, error) {
-	val, err := ctx.Params.ByName(key)
-	return val, err
+func (ctx *Context) Param(key string) string {
+	val, _ := ctx.Params.ByName(key)
+	return val
 }
 
 // Redirect method sets the response as a 301 redirection.

@@ -69,12 +69,7 @@ func TestParam(t *testing.T) {
 	_, app, r, w := makeTestContext("POST", "/foo/")
 	app.MiddlewareChain = NewChain()
 	app.Post("/:page/", func(ctx *Context) {
-		v, err := ctx.Param("page")
-		if err != nil {
-			t.Errorf("Could not retrieve parameter.")
-		}
-		assertNoError(t, err)
-		assertEqual(t, v, "foo")
+		assertEqual(t, ctx.Param("page"), "foo")
 		ctx.Write("success")
 	})
 	app.ServeHTTP(w, r)
@@ -84,15 +79,9 @@ func TestParamWithMultipleParameters(t *testing.T) {
 	_, app, r, w := makeTestContext("POST", "/dinever/golf/")
 	app.MiddlewareChain = NewChain()
 	app.Post("/:user/:repo/", func(ctx *Context) {
-		v, err := ctx.Param("user")
-		assertNoError(t, err)
-		assertEqual(t, v, "dinever")
-		v, err = ctx.Param("repo")
-		assertNoError(t, err)
-		assertEqual(t, v, "golf")
-		v, err = ctx.Param("org")
-		assertError(t, err)
-		assertEqual(t, v, "")
+		assertEqual(t, ctx.Param("user"), "dinever")
+		assertEqual(t, ctx.Param("repo"), "golf")
+		assertEqual(t, ctx.Param("org"), "")
 		ctx.Write("success")
 	})
 	app.ServeHTTP(w, r)
