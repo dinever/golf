@@ -5,14 +5,11 @@ import (
 	"io"
 	"log"
 	"net/http/httputil"
-	"os"
 	"time"
 )
 
 // MiddlewareHandlerFunc defines the middleware function type that Golf uses.
 type MiddlewareHandlerFunc func(next HandlerFunc) HandlerFunc
-
-var defaultMiddlewares = []MiddlewareHandlerFunc{LoggingMiddleware(os.Stdout), RecoverMiddleware, XSRFProtectionMiddleware, SessionMiddleware}
 
 // Chain contains a sequence of middlewares.
 type Chain struct {

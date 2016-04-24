@@ -28,8 +28,8 @@ type Application struct {
 	// NotFoundHandler handles requests when no route is matched.
 	NotFoundHandler HandlerFunc
 
-	// MiddlewareChain is the default middlewares that Golf uses.
-	MiddlewareChain *Chain
+	// MiddlewareChain is the middlewares that Golf uses.
+	middlewareChain *Chain
 
 	pool sync.Pool
 
@@ -49,19 +49,22 @@ func New() *Application {
 	app.staticRouter = make(map[string][]string)
 	app.View = NewView()
 	app.Config = NewConfig()
-	// debug, _ := app.Config.GetBool("debug", false)
 	app.errorHandler = make(map[int]ErrorHandlerFunc)
-	app.MiddlewareChain = NewChain()
+	app.middlewareChain = NewChain()
 	app.DefaultErrorHandler = defaultErrorHandler
 	app.pool.New = func() interface{} {
 		return new(Context)
 	}
+	app.handlerChain = app.middlewareChain.Final(app.handler)
 	return app
 }
 
 // Use appends a middleware to the existing middleware chain.
-func (app *Application) Use(m MiddlewareHandlerFunc) {
-	app.MiddlewareChain.Append(m)
+func (app *Application) Use(m ...MiddlewareHandlerFunc) {
+	for _, fn := range m {
+		app.middlewareChain.Append(fn)
+	}
+	app.handlerChain = app.middlewareChain.Final(app.handler)
 }
 
 // First search if any of the static route matches the request.
@@ -97,9 +100,6 @@ func staticHandler(ctx *Context, filePath string) {
 
 // Basic entrance of an `http.ResponseWriter` and an `http.Request`.
 func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	if app.handlerChain == nil {
-		app.handlerChain = app.MiddlewareChain.Final(app.handler)
-	}
 	ctx := app.pool.Get().(*Context)
 	ctx.reset()
 	ctx.Request = req

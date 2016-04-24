@@ -68,7 +68,7 @@ func TestContextCreate(t *testing.T) {
 
 func TestParam(t *testing.T) {
 	_, app, r, w := makeTestContext("POST", "/foo/")
-	app.MiddlewareChain = NewChain()
+	app.middlewareChain = NewChain()
 	app.Post("/:page/", func(ctx *Context) {
 		assertEqual(t, ctx.Param("page"), "foo")
 		ctx.Send("success")
@@ -78,7 +78,7 @@ func TestParam(t *testing.T) {
 
 func TestParamWithMultipleParameters(t *testing.T) {
 	_, app, r, w := makeTestContext("POST", "/dinever/golf/")
-	app.MiddlewareChain = NewChain()
+	app.middlewareChain = NewChain()
 	app.Post("/:user/:repo/", func(ctx *Context) {
 		assertEqual(t, ctx.Param("user"), "dinever")
 		assertEqual(t, ctx.Param("repo"), "golf")
@@ -155,7 +155,7 @@ func TestSessionWithInvalidSid(t *testing.T) {
 func TestSession(t *testing.T) {
 	_, app, r, w := makeTestContext("GET", "/foo/")
 	app.SessionManager = NewMemorySessionManager()
-	app.MiddlewareChain = NewChain(SessionMiddleware)
+	app.Use(SessionMiddleware)
 	var (
 		firstSid string
 	)
@@ -186,7 +186,7 @@ func TestXSRFProtectionWithoutCookie(t *testing.T) {
 
 func TestXSRFProtectionDisabled(t *testing.T) {
 	_, app, r, w := makeTestContext("POST", "/foo/bar/")
-	app.MiddlewareChain = NewChain(XSRFProtectionMiddleware)
+	app.middlewareChain = NewChain(XSRFProtectionMiddleware)
 	app.Post("/foo/bar/", func(ctx *Context) {
 		ctx.Send("success")
 	})
@@ -199,7 +199,7 @@ func TestXSRFProtectionDisabled(t *testing.T) {
 func TestXSRFProtection(t *testing.T) {
 	_, app, r, w := makeTestContext("GET", "/login/")
 	app.Config.Set("xsrf_cookies", true)
-	app.MiddlewareChain = NewChain(XSRFProtectionMiddleware)
+	app.middlewareChain = NewChain(XSRFProtectionMiddleware)
 	var expectedToken string
 	app.Get("/login/", func(ctx *Context) {
 		expectedToken = ctx.xsrfToken()

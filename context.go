@@ -15,25 +15,25 @@ import (
 // Context is a wrapper of http.Request and http.ResponseWriter.
 type Context struct {
 	// http.Request
-	Request        *http.Request
+	Request *http.Request
 
 	// http.ResponseWriter
-	Response       http.ResponseWriter
+	Response http.ResponseWriter
 
 	// URL Parameter
-	Params         Parameter
+	Params Parameter
 
 	// HTTP status code
-	statusCode     int
+	statusCode int
 
 	// The application
-	App            *Application
+	App *Application
 
 	// Session instance for the current context.
-	Session        Session
+	Session Session
 
 	// Indicating if the response is already sent.
-	IsSent         bool
+	IsSent bool
 
 	// Indicating loader of the template
 	templateLoader string
@@ -81,6 +81,7 @@ func (ctx *Context) retrieveSession() {
 	ctx.Session = s
 }
 
+// SendStatus takes an integer and sets the response status to the integer given.
 func (ctx *Context) SendStatus(statusCode int) {
 	ctx.statusCode = statusCode
 	ctx.Response.WriteHeader(statusCode)
