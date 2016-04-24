@@ -18,7 +18,7 @@ func newRouter() *router {
 	return &router{trees: make(map[string]*node)}
 }
 
-func splitURLpath(path string) (parts []string, names map[string]int) {
+func splitURLPath(path string) (parts []string, names map[string]int) {
 
 	var (
 		nameidx      = -1
@@ -81,7 +81,7 @@ func (router *router) AddRoute(method string, path string, handler HandlerFunc) 
 		rootNode *node
 		ok       bool
 	)
-	parts, names := splitURLpath(path)
+	parts, names := splitURLPath(path)
 	if rootNode, ok = router.trees[method]; !ok {
 		rootNode = &node{}
 		router.trees[method] = rootNode

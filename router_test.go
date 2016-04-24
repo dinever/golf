@@ -91,7 +91,7 @@ func TestSplitURLPath(t *testing.T) {
 	}
 
 	for path, result := range table {
-		parts, _ := splitURLpath(path)
+		parts, _ := splitURLPath(path)
 		assertSliceEqual(t, parts, result[0])
 	}
 }
