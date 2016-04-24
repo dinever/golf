@@ -280,7 +280,6 @@ func (ctx *Context) Render(file string, data ...map[string]interface{}) {
 	if err != nil {
 		panic(err)
 	}
-	ctx.SetHeader("Content-Type", "text/html;charset=UTF-8")
 	ctx.Send(content)
 }
 
@@ -297,6 +296,5 @@ func (ctx *Context) RenderFromString(tplSrc string, data ...map[string]interface
 	if e != nil {
 		panic(e)
 	}
-	ctx.SetHeader("Content-Type", "text/html;charset=UTF-8")
 	ctx.Send(content)
 }
