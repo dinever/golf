@@ -65,8 +65,17 @@ type Template struct {
 func (t *TemplateManager) Render(w io.Writer, name string, data interface{}) error {
 	stack := []*Template{}
 	tplSrc, err := t.getSrc(name)
+	if err != nil {
+		return err
+	}
 	err = t.push(&stack, tplSrc, name)
+	if err != nil {
+		return err
+	}
 	tpl, err := t.assemble(stack)
+	if err != nil {
+		return err
+	}
 	if err != nil {
 		return err
 	}

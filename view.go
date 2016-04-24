@@ -31,9 +31,9 @@ func (view *View) Render(loaderName string, filePath string, data map[string]int
 		panic(errors.New("Template loader not found: " + loaderName))
 	}
 	var buf bytes.Buffer
-	e := loader.Render(&buf, filePath, data)
-	if e != nil {
-		return "", e
+	err := loader.Render(&buf, filePath, data)
+	if err != nil {
+		return "", err
 	}
 	return buf.String(), nil
 }
