@@ -125,7 +125,7 @@ func defaultErrorHandler(ctx *Context, data ...map[string]interface{}) {
 	var buf bytes.Buffer
 	tmpl.Parse(errorTemplate)
 	tmpl.Execute(&buf, renderData)
-	ctx.Send(buf)
+	ctx.Send(&buf)
 }
 
 // Frame represent a stack frame inside of a Honeybadger backtrace.

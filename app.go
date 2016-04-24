@@ -174,8 +174,8 @@ func (app *Application) Error(statusCode int, handler ErrorHandlerFunc) {
 // Handles a HTTP Error, if there is a corresponding handler set in the map
 // `errorHandler`, then call it. Otherwise call the `defaultErrorHandler`.
 func (app *Application) handleError(ctx *Context, statusCode int, data ...map[string]interface{}) {
-	ctx.statusCode = statusCode
-	handler, ok := app.errorHandler[ctx.statusCode]
+	ctx.SendStatus(statusCode)
+	handler, ok := app.errorHandler[statusCode]
 	if !ok {
 		defaultErrorHandler(ctx, data...)
 		return
