@@ -117,8 +117,7 @@ func colorForMethod(method string) string {
 // XSRFProtectionMiddleware is the built-in middleware for XSRF protection.
 func XSRFProtectionMiddleware(next HandlerFunc) HandlerFunc {
 	fn := func(ctx *Context) {
-		xsrfEnabled, _ := ctx.App.Config.GetBool("xsrf_cookies", false)
-		if xsrfEnabled && (ctx.Request.Method == "POST" || ctx.Request.Method == "PUT" || ctx.Request.Method == "DELETE") {
+		if ctx.Request.Method == "POST" || ctx.Request.Method == "PUT" || ctx.Request.Method == "DELETE" {
 			if !ctx.checkXSRFToken() {
 				ctx.Abort(403)
 				return
