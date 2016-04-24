@@ -173,6 +173,7 @@ func (ctx *Context) Send(body interface{}) {
 	if ctx.IsSent {
 		return
 	}
+	ctx.SetHeader("Content-Type", "text/html;charset=UTF-8")
 	switch body.(type) {
 	case []byte:
 		ctx.Response.Write(body.([]byte))
