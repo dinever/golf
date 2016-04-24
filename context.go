@@ -25,9 +25,6 @@ type Context struct {
 	// HTTP status code
 	StatusCode int
 
-	// HTTP header as a map
-	Header map[string]string
-
 	// HTTP response body as a byte string
 	Body []byte
 
@@ -53,9 +50,8 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 	ctx.Request = req
 	ctx.Response = res
 	ctx.App = app
-	ctx.Header = make(map[string]string)
 	ctx.StatusCode = 200
-	ctx.Header["Content-Type"] = "text/html;charset=UTF-8"
+	//	ctx.Header["Content-Type"] = "text/html;charset=UTF-8"
 	ctx.Request.ParseForm()
 	ctx.IsSent = false
 	ctx.Data = make(map[string]interface{})
@@ -91,6 +87,23 @@ func (ctx *Context) retrieveSession() {
 	ctx.Session = s
 }
 
+// SetHeader sets the header entries associated with key to the single element value. It replaces any existing values associated with key.
+func (ctx *Context) SetHeader(key, value string) {
+	ctx.Response.Header().Set(key, value)
+}
+
+func (ctx *Context) AddHeader(key, value string) {
+	ctx.Response.Header().Add(key, value)
+}
+
+func (ctx *Context) Header(key string) string {
+	return ctx.Response.Header().Get(key)
+}
+
+func (ctx *Context) DeleteHeader(key string) {
+	ctx.Response.Header().Del(key)
+}
+
 // Query method retrieves the form data, return empty string if not found.
 func (ctx *Context) Query(key string, index ...int) (string, error) {
 	if val, ok := ctx.Request.Form[key]; ok {
@@ -104,15 +117,15 @@ func (ctx *Context) Query(key string, index ...int) (string, error) {
 
 // Param method retrieves the parameters from url
 // If the url is /:id/, then id can be retrieved by calling `ctx.Param(id)`
-func (ctx *Context) Param(key string) (string, error) {
-	val, err := ctx.Params.ByName(key)
-	return val, err
+func (ctx *Context) Param(key string) string {
+	val, _ := ctx.Params.ByName(key)
+	return val
 }
 
 // Redirect method sets the response as a 301 redirection.
 // If you need a 302 redirection, please do it by setting the Header manually.
 func (ctx *Context) Redirect(url string) {
-	ctx.Header["Location"] = url
+	ctx.SetHeader("Location", url)
 	ctx.StatusCode = 301
 }
 
@@ -148,7 +161,7 @@ func (ctx *Context) JSON(obj interface{}) {
 		panic(err)
 	}
 	ctx.Body = json
-	ctx.Header["Content-Type"] = "application/json"
+	ctx.SetHeader("Content-Type", "application/json")
 }
 
 // Send the response immediately. Set `ctx.IsSent` to `true` to make
@@ -156,9 +169,6 @@ func (ctx *Context) JSON(obj interface{}) {
 func (ctx *Context) Send() {
 	if ctx.IsSent {
 		return
-	}
-	for name, value := range ctx.Header {
-		ctx.Response.Header().Set(name, value)
 	}
 	ctx.Response.WriteHeader(ctx.StatusCode)
 	ctx.Response.Write(ctx.Body)
