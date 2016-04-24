@@ -87,6 +87,11 @@ func (ctx *Context) SendStatus(statusCode int) {
 	ctx.Response.WriteHeader(statusCode)
 }
 
+// StatusCode returns the status code that golf has sent.
+func (ctx *Context) StatusCode() int {
+	return ctx.statusCode
+}
+
 // SetHeader sets the header entries associated with key to the single element value. It replaces any existing values associated with key.
 func (ctx *Context) SetHeader(key, value string) {
 	ctx.Response.Header().Set(key, value)
@@ -175,6 +180,8 @@ func (ctx *Context) Send(body interface{}) {
 		ctx.Response.Write([]byte(body.(string)))
 	case *bytes.Buffer:
 		ctx.Response.Write(body.(*bytes.Buffer).Bytes())
+	default:
+		panic(fmt.Errorf("Body type not supported."))
 	}
 	ctx.IsSent = true
 }
@@ -212,7 +219,6 @@ func (ctx *Context) ClientIP() string {
 // handler inside `App.errorHandler` will be called, if user has not set
 // the corresponding error handler, the defaultErrorHandler will be called.
 func (ctx *Context) Abort(statusCode int, data ...map[string]interface{}) {
-	ctx.SendStatus(statusCode)
 	ctx.App.handleError(ctx, statusCode, data...)
 }
 
@@ -270,9 +276,9 @@ func (ctx *Context) Render(file string, data ...map[string]interface{}) {
 		renderData = data[0]
 	}
 	renderData["xsrf_token"] = ctx.xsrfToken()
-	content, e := ctx.App.View.Render(ctx.templateLoader, file, renderData)
-	if e != nil {
-		panic(e)
+	content, err := ctx.App.View.Render(ctx.templateLoader, file, renderData)
+	if err != nil {
+		panic(err)
 	}
 	ctx.Send(content)
 }
