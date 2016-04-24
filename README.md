@@ -53,16 +53,11 @@ package main
 import "github.com/dinever/golf"
 
 func mainHandler(ctx *golf.Context) {
-  ctx.Write("Hello World!")
+  ctx.Send("Hello World!")
 }
 
 func pageHandler(ctx *golf.Context) {
-  page, err := ctx.Param("page")
-  if err != nil {
-    ctx.Abort(500)
-    return
-  }
-  ctx.Write("Page: " + page)
+  ctx.Send("Page: " + ctx.Param("page"))
 }
 
 func main() {

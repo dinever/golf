@@ -66,7 +66,7 @@ func LoggingMiddleware(out io.Writer) MiddlewareHandlerFunc {
 
 			clientIP := ctx.ClientIP()
 			method := ctx.Request.Method
-			statusCode := ctx.StatusCode
+			statusCode := ctx.statusCode
 			statusColor := colorForStatus(statusCode)
 			methodColor := colorForMethod(method)
 
@@ -140,9 +140,9 @@ func RecoverMiddleware(next HandlerFunc) HandlerFunc {
 				e := NewError(err)
 				httpRequest, _ := httputil.DumpRequest(ctx.Request, true)
 				log.Printf("[Recovery] panic recovered:\n%s\n%s\n%s", string(httpRequest), err, e.StackTraceString())
-				ctx.StatusCode = 500
+				ctx.statusCode = 500
 				ctx.Abort(500, map[string]interface{}{
-					"Code":        ctx.StatusCode,
+					"Code":        ctx.statusCode,
 					"Title":       "Internal Server Error",
 					"HTTPRequest": string(httpRequest),
 					"Message":     e.Error(),

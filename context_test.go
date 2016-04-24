@@ -2,6 +2,7 @@ package golf
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -70,7 +71,7 @@ func TestParam(t *testing.T) {
 	app.MiddlewareChain = NewChain()
 	app.Post("/:page/", func(ctx *Context) {
 		assertEqual(t, ctx.Param("page"), "foo")
-		ctx.Write("success")
+		ctx.Send("success")
 	})
 	app.ServeHTTP(w, r)
 }
@@ -82,7 +83,7 @@ func TestParamWithMultipleParameters(t *testing.T) {
 		assertEqual(t, ctx.Param("user"), "dinever")
 		assertEqual(t, ctx.Param("repo"), "golf")
 		assertEqual(t, ctx.Param("org"), "")
-		ctx.Write("success")
+		ctx.Send("success")
 	})
 	app.ServeHTTP(w, r)
 }
@@ -93,7 +94,6 @@ func TestCookieSet(t *testing.T) {
 	app := New()
 	ctx := NewContext(r, w, app)
 	ctx.SetCookie("foo", "bar", 0)
-	ctx.Send()
 	assertEqual(t, w.HeaderMap.Get("Set-Cookie"), `foo=bar; Path=/`)
 }
 
@@ -103,7 +103,6 @@ func TestCookieSetWithExpire(t *testing.T) {
 	app := New()
 	ctx := NewContext(r, w, app)
 	ctx.SetCookie("foo", "bar", 3600)
-	ctx.Send()
 	rawCookie := w.HeaderMap.Get("Set-Cookie")
 	rawRequest := fmt.Sprintf("GET / HTTP/1.0\r\nCookie: %s\r\n\r\n", rawCookie)
 	req, err := http.ReadRequest(bufio.NewReader(strings.NewReader(rawRequest)))
@@ -112,6 +111,34 @@ func TestCookieSetWithExpire(t *testing.T) {
 		cookie := cookies[3]
 		assertEqual(t, cookie.Value, "3600")
 	}
+}
+
+func TestSetHeader(t *testing.T) {
+	ctx, _, _, w := makeTestContext("GET", "/foo/bar/")
+	ctx.SetHeader("foo", "bar")
+	assertEqual(t, w.Header().Get("foo"), "bar")
+}
+
+func TestAddHeader(t *testing.T) {
+	ctx, _, _, w := makeTestContext("GET", "/foo/bar/")
+	ctx.AddHeader("foo", "foo")
+	ctx.AddHeader("foo", "bar")
+	assertDeepEqual(t, w.HeaderMap["Foo"], []string{"foo", "bar"})
+}
+
+func TestGetHeader(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/foo/bar/")
+	r.Header.Set("foo", "bar")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	assertEqual(t, ctx.Header("foo"), "bar")
+}
+
+func TestSendStatus(t *testing.T) {
+	ctx, _, _, w := makeTestContext("GET", "/")
+	ctx.SendStatus(500)
+	assertEqual(t, w.Code, 500)
 }
 
 func TestSessionWithInvalidSid(t *testing.T) {
@@ -137,14 +164,14 @@ func TestSession(t *testing.T) {
 			t.Errorf("Could not retrieve session.")
 		}
 		firstSid = ctx.Session.SessionID()
-		ctx.Write("success")
+		ctx.Send("success")
 	})
 	app.ServeHTTP(w, r)
 	app.Get("/bar/", func(ctx *Context) {
 		if ctx.Session.SessionID() != firstSid {
 			t.Errorf("Could not retrieve correct session from the same user.")
 		}
-		ctx.Write("success")
+		ctx.Send("success")
 	})
 	_, _, r, w = makeTestContext("GET", "/bar/")
 	r.AddCookie(&http.Cookie{Name: "sid", Value: firstSid})
@@ -161,7 +188,7 @@ func TestXSRFProtectionDisabled(t *testing.T) {
 	_, app, r, w := makeTestContext("POST", "/foo/bar/")
 	app.MiddlewareChain = NewChain(XSRFProtectionMiddleware)
 	app.Post("/foo/bar/", func(ctx *Context) {
-		ctx.Write("success")
+		ctx.Send("success")
 	})
 	app.ServeHTTP(w, r)
 
@@ -176,10 +203,10 @@ func TestXSRFProtection(t *testing.T) {
 	var expectedToken string
 	app.Get("/login/", func(ctx *Context) {
 		expectedToken = ctx.xsrfToken()
-		ctx.Write("success")
+		ctx.Send("success")
 	})
 	app.Post("/login/", func(ctx *Context) {
-		ctx.Write("success")
+		ctx.Send("success")
 	})
 	app.ServeHTTP(w, r)
 
@@ -252,15 +279,36 @@ func TestRedirection(t *testing.T) {
 	app := New()
 	ctx := NewContext(r, w, app)
 	ctx.Redirect("/foo")
-	ctx.Send()
 	assertEqual(t, w.Header().Get("Location"), `/foo`)
 	assertEqual(t, w.Code, 301)
 }
 
-func TestWrite(t *testing.T) {
-	ctx := makeNewContext("GET", "/foo")
-	ctx.Write("hello world")
-	assertDeepEqual(t, ctx.Body, []byte("hello world"))
+func TestSendString(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	ctx.Send("hello world")
+	assertDeepEqual(t, w.Body.Bytes(), []byte("hello world"))
+}
+
+func TestSendByteSlice(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	ctx.Send([]byte("hello world"))
+	assertDeepEqual(t, w.Body.Bytes(), []byte("hello world"))
+}
+
+func TestSendBuffer(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	buf := bytes.NewBuffer([]byte("hello world"))
+	ctx.Send(buf)
+	assertDeepEqual(t, w.Body.Bytes(), []byte("hello world"))
 }
 
 func TestAbort(t *testing.T) {
@@ -312,7 +360,6 @@ func TestRenderFromString(t *testing.T) {
 		app := New()
 		ctx := NewContext(r, w, app)
 		ctx.RenderFromString(c.src, c.args)
-		ctx.Send()
 		assertEqual(t, w.Body.String(), c.output)
 	}
 }
@@ -334,7 +381,6 @@ func TestJSON(t *testing.T) {
 		app := New()
 		ctx := NewContext(r, w, app)
 		ctx.JSON(c.input)
-		ctx.Send()
 		assertEqual(t, w.Body.String(), c.output)
 		assertEqual(t, w.HeaderMap.Get("Content-Type"), `application/json`)
 	}

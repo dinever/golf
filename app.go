@@ -60,7 +60,7 @@ func New() *Application {
 }
 
 // Use appends a middleware to the existing middleware chain.
-func (app *Application) Use(m middlewareHandler) {
+func (app *Application) Use(m MiddlewareHandlerFunc) {
 	app.MiddlewareChain.Append(m)
 }
 
@@ -87,7 +87,7 @@ func (app *Application) handler(ctx *Context) {
 		ctx.Params = params
 		handler(ctx)
 	}
-	ctx.Send()
+	ctx.IsSent = true
 }
 
 // Serve a static file
@@ -174,8 +174,8 @@ func (app *Application) Error(statusCode int, handler ErrorHandlerFunc) {
 // Handles a HTTP Error, if there is a corresponding handler set in the map
 // `errorHandler`, then call it. Otherwise call the `defaultErrorHandler`.
 func (app *Application) handleError(ctx *Context, statusCode int, data ...map[string]interface{}) {
-	ctx.StatusCode = statusCode
-	handler, ok := app.errorHandler[ctx.StatusCode]
+	ctx.statusCode = statusCode
+	handler, ok := app.errorHandler[ctx.statusCode]
 	if !ok {
 		defaultErrorHandler(ctx, data...)
 		return

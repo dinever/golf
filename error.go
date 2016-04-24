@@ -105,28 +105,27 @@ func defaultErrorHandler(ctx *Context, data ...map[string]interface{}) {
 	var renderData map[string]interface{}
 	if len(data) == 0 {
 		renderData = make(map[string]interface{})
-		renderData["Code"] = ctx.StatusCode
-		renderData["Title"] = http.StatusText(ctx.StatusCode)
-		renderData["Message"] = http.StatusText(ctx.StatusCode)
+		renderData["Code"] = ctx.statusCode
+		renderData["Title"] = http.StatusText(ctx.statusCode)
+		renderData["Message"] = http.StatusText(ctx.statusCode)
 	} else {
 		renderData = data[0]
 	}
 	if _, ok := renderData["Code"]; !ok {
-		renderData["Code"] = ctx.StatusCode
+		renderData["Code"] = ctx.statusCode
 	}
 	if _, ok := renderData["Title"]; !ok {
-		renderData["Title"] = http.StatusText(ctx.StatusCode)
+		renderData["Title"] = http.StatusText(ctx.statusCode)
 	}
 	if _, ok := renderData["Message"]; !ok {
-		renderData["Message"] = http.StatusText(ctx.StatusCode)
+		renderData["Message"] = http.StatusText(ctx.statusCode)
 	}
 	httpRequest, _ := httputil.DumpRequest(ctx.Request, true)
 	renderData["HTTPRequest"] = string(httpRequest)
 	var buf bytes.Buffer
 	tmpl.Parse(errorTemplate)
 	tmpl.Execute(&buf, renderData)
-	ctx.Write(buf.String())
-	ctx.Send()
+	ctx.Send(buf)
 }
 
 // Frame represent a stack frame inside of a Honeybadger backtrace.

@@ -1,6 +1,7 @@
 package golf
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -14,31 +15,25 @@ import (
 // Context is a wrapper of http.Request and http.ResponseWriter.
 type Context struct {
 	// http.Request
-	Request *http.Request
+	Request        *http.Request
 
 	// http.ResponseWriter
-	Response http.ResponseWriter
+	Response       http.ResponseWriter
 
 	// URL Parameter
-	Params Parameter
+	Params         Parameter
 
 	// HTTP status code
-	StatusCode int
-
-	// HTTP response body as a byte string
-	Body []byte
+	statusCode     int
 
 	// The application
-	App *Application
-
-	// Data used for sharing values among middlewares
-	Data map[string]interface{}
+	App            *Application
 
 	// Session instance for the current context.
-	Session Session
+	Session        Session
 
 	// Indicating if the response is already sent.
-	IsSent bool
+	IsSent         bool
 
 	// Indicating loader of the template
 	templateLoader string
@@ -50,16 +45,15 @@ func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *C
 	ctx.Request = req
 	ctx.Response = res
 	ctx.App = app
-	ctx.StatusCode = 200
+	ctx.statusCode = 200
 	//	ctx.Header["Content-Type"] = "text/html;charset=UTF-8"
 	ctx.Request.ParseForm()
 	ctx.IsSent = false
-	ctx.Data = make(map[string]interface{})
 	return ctx
 }
 
 func (ctx *Context) reset() {
-	ctx.StatusCode = 200
+	ctx.statusCode = 200
 	ctx.IsSent = false
 }
 
@@ -87,21 +81,24 @@ func (ctx *Context) retrieveSession() {
 	ctx.Session = s
 }
 
+func (ctx *Context) SendStatus(statusCode int) {
+	ctx.statusCode = statusCode
+	ctx.Response.WriteHeader(statusCode)
+}
+
 // SetHeader sets the header entries associated with key to the single element value. It replaces any existing values associated with key.
 func (ctx *Context) SetHeader(key, value string) {
 	ctx.Response.Header().Set(key, value)
 }
 
+// AddHeader adds the key, value pair to the header. It appends to any existing values associated with key.
 func (ctx *Context) AddHeader(key, value string) {
 	ctx.Response.Header().Add(key, value)
 }
 
+// Header gets the first value associated with the given key. If there are no values associated with the key, Get returns "".
 func (ctx *Context) Header(key string) string {
-	return ctx.Response.Header().Get(key)
-}
-
-func (ctx *Context) DeleteHeader(key string) {
-	ctx.Response.Header().Del(key)
+	return ctx.Request.Header.Get(key)
 }
 
 // Query method retrieves the form data, return empty string if not found.
@@ -126,7 +123,7 @@ func (ctx *Context) Param(key string) string {
 // If you need a 302 redirection, please do it by setting the Header manually.
 func (ctx *Context) Redirect(url string) {
 	ctx.SetHeader("Location", url)
-	ctx.StatusCode = 301
+	ctx.SendStatus(301)
 }
 
 // Cookie returns the value of the cookie by indicating the key.
@@ -160,28 +157,29 @@ func (ctx *Context) JSON(obj interface{}) {
 	if err != nil {
 		panic(err)
 	}
-	ctx.Body = json
 	ctx.SetHeader("Content-Type", "application/json")
+	ctx.Send(json)
 }
 
 // Send the response immediately. Set `ctx.IsSent` to `true` to make
 // sure that the response won't be sent twice.
-func (ctx *Context) Send() {
+func (ctx *Context) Send(body interface{}) {
 	if ctx.IsSent {
 		return
 	}
-	ctx.Response.WriteHeader(ctx.StatusCode)
-	ctx.Response.Write(ctx.Body)
+	switch body.(type) {
+	case []byte:
+		ctx.Response.Write(body.([]byte))
+	case string:
+		ctx.Response.Write([]byte(body.(string)))
+	case *bytes.Buffer:
+		ctx.Response.Write(body.(*bytes.Buffer).Bytes())
+	}
 	ctx.IsSent = true
 }
 
-// Write text on the response body.
-func (ctx *Context) Write(content string) {
-	ctx.Body = []byte(content)
-}
-
-func (c *Context) requestHeader(key string) string {
-	if values, _ := c.Request.Header[key]; len(values) > 0 {
+func (ctx *Context) requestHeader(key string) string {
+	if values, _ := ctx.Request.Header[key]; len(values) > 0 {
 		return values[0]
 	}
 	return ""
@@ -213,9 +211,8 @@ func (ctx *Context) ClientIP() string {
 // handler inside `App.errorHandler` will be called, if user has not set
 // the corresponding error handler, the defaultErrorHandler will be called.
 func (ctx *Context) Abort(statusCode int, data ...map[string]interface{}) {
-	ctx.StatusCode = statusCode
+	ctx.SendStatus(statusCode)
 	ctx.App.handleError(ctx, statusCode, data...)
-	ctx.Send()
 }
 
 // Loader method sets the template loader for this context. This should be done before calling
@@ -276,7 +273,7 @@ func (ctx *Context) Render(file string, data ...map[string]interface{}) {
 	if e != nil {
 		panic(e)
 	}
-	ctx.Body = []byte(content)
+	ctx.Send(content)
 }
 
 // RenderFromString renders a input string.
@@ -292,5 +289,5 @@ func (ctx *Context) RenderFromString(tplSrc string, data ...map[string]interface
 	if e != nil {
 		panic(e)
 	}
-	ctx.Body = []byte(content)
+	ctx.Send(content)
 }
