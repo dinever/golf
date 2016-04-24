@@ -179,7 +179,7 @@ func NewError(msg interface{}) Error {
 		err:     err,
 		Message: err.Error(),
 		Class:   reflect.TypeOf(err).String(),
-		Stack:   generateStack(5),
+		Stack:   generateStack(3),
 	}
 }
 
