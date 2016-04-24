@@ -3,6 +3,7 @@
 [![GoDoc](http://img.shields.io/badge/golf-documentation-blue.svg?style=flat-square)](http://golf.readme.io/docs)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/dinever/golf/master/LICENSE) 
 [![Build Status](http://img.shields.io/travis/dinever/golf.svg?style=flat-square)](https://travis-ci.org/dinever/golf) 
+[![Build Status](https://goreportcard.com/badge/github.com/dinever/golf?style=flat-square)](https://travis-ci.org/dinever/golf) 
 [![Coverage Status](http://img.shields.io/coveralls/dinever/golf.svg?style=flat-square)](https://coveralls.io/r/dinever/golf?branch=master)
 
 A fast, simple and lightweight micro-web framework for Go, comes with powerful features and has no dependencies other than the Go Standard Library.
