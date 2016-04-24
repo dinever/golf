@@ -7,6 +7,7 @@ import (
 
 func mainHandler(ctx *golf.Context) {
 	name, err := ctx.Session.Get("name")
+	ctx.SetHeader("Content-Type", "text/html;charset=UTF-8")
 	if err != nil {
 		ctx.Send("Hello World! Please <a href=\"/login\">log in</a>. Current sessions: " + strconv.Itoa(ctx.App.SessionManager.Count()))
 	} else {
