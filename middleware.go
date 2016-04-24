@@ -9,17 +9,18 @@ import (
 	"time"
 )
 
-type middlewareHandler func(next HandlerFunc) HandlerFunc
+// MiddlewareHandlerFunc defines the middleware function type that Golf uses.
+type MiddlewareHandlerFunc func(next HandlerFunc) HandlerFunc
 
-var defaultMiddlewares = []middlewareHandler{LoggingMiddleware(os.Stdout), RecoverMiddleware, XSRFProtectionMiddleware, SessionMiddleware}
+var defaultMiddlewares = []MiddlewareHandlerFunc{LoggingMiddleware(os.Stdout), RecoverMiddleware, XSRFProtectionMiddleware, SessionMiddleware}
 
 // Chain contains a sequence of middlewares.
 type Chain struct {
-	middlewareHandlers []middlewareHandler
+	middlewareHandlers []MiddlewareHandlerFunc
 }
 
 // NewChain Creates a new middleware chain.
-func NewChain(handlerArray ...middlewareHandler) *Chain {
+func NewChain(handlerArray ...MiddlewareHandlerFunc) *Chain {
 	c := new(Chain)
 	c.middlewareHandlers = handlerArray
 	return c
@@ -35,7 +36,7 @@ func (c Chain) Final(fn HandlerFunc) HandlerFunc {
 }
 
 // Append a middleware to the middleware chain
-func (c *Chain) Append(fn middlewareHandler) {
+func (c *Chain) Append(fn MiddlewareHandlerFunc) {
 	c.middlewareHandlers = append(c.middlewareHandlers, fn)
 }
 
@@ -52,7 +53,7 @@ var (
 
 // LoggingMiddleware is the built-in middleware for logging.
 // This method is referred from https://github.com/gin-gonic/gin/blob/develop/logger.go#L46
-func LoggingMiddleware(out io.Writer) middlewareHandler {
+func LoggingMiddleware(out io.Writer) MiddlewareHandlerFunc {
 	return func(next HandlerFunc) HandlerFunc {
 		fn := func(ctx *Context) {
 			start := time.Now()
