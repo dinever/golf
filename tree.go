@@ -78,17 +78,15 @@ func (n *node) addRoute(parts []string, names map[string]int, handler HandlerFun
 	var (
 		tmpNode     *node
 		currentNode *node
-		loop        = true
 	)
 
 	currentNode, result, i := n.matchNode(parts[0])
 
-	for loop == true {
+	for {
 		if currentNode == nil {
 			currentNode = &node{text: parts[0]}
 			n.children = append(n.children, currentNode)
 		} else if result == 1 {
-			//
 			parts[0] = parts[0][len(currentNode.text):]
 			tmpNode, result, i = currentNode.matchNode(parts[0])
 			n = currentNode
