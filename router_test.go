@@ -134,9 +134,6 @@ func TestPathNotFound(t *testing.T) {
 	}
 }
 
-
-
-
 func TestRouterWithOptionalEndingSlash(t *testing.T) {
 	var cases = []route{
 		// Path with optional ending slash
@@ -176,4 +173,3 @@ func TestRouterWithOptionalEndingSlash(t *testing.T) {
 		}
 	}
 }
-
