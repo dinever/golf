@@ -81,12 +81,22 @@ func (router *router) AddRoute(method string, path string, handler HandlerFunc) 
 		rootNode *node
 		ok       bool
 	)
-	parts, names := splitURLPath(path)
 	if rootNode, ok = router.trees[method]; !ok {
 		rootNode = &node{}
 		router.trees[method] = rootNode
 	}
+
+	parts, names := splitURLPath(path)
 	rootNode.addRoute(parts, names, handler)
+
+	if path == "/" {
+	} else if path[len(path) - 1] != '/' {
+		parts, names := splitURLPath(path + "/")
+		rootNode.addRoute(parts, names, handler)
+	} else {
+		parts, names := splitURLPath(path[:len(path) - 1])
+		rootNode.addRoute(parts, names, handler)
+	}
 	rootNode.optimizeRoutes()
 }
 
