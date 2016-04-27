@@ -133,3 +133,47 @@ func TestPathNotFound(t *testing.T) {
 		}
 	}
 }
+
+
+
+
+func TestRouterWithOptionalEndingSlash(t *testing.T) {
+	var cases = []route{
+		// Path with optional ending slash
+		{"GET", "/", "/", nil},
+		{"GET", "/events", "/events/", nil},
+		{"GET", "/repos/:owner/:repo/events", "/repos/dinever/golf/events/", map[string]string{"owner": "dinever", "repo": "golf"}},
+		{"GET", "/networks/:owner/:repo/events/", "/networks/dinever/golf/events", map[string]string{"owner": "dinever", "repo": "golf"}},
+		{"GET", "/orgs/:org/events/", "/orgs/golf/events", map[string]string{"org": "golf"}},
+		{"GET", "/users/:user/received_events", "/users/dinever/received_events/", nil},
+		{"GET", "/users/:user/received_events/public", "/users/dinever/received_events/public", nil},
+	}
+
+	router := newRouter()
+	for _, route := range cases {
+		router.AddRoute(route.method, route.path, handler)
+	}
+
+	for _, route := range cases {
+		_, param, err := router.FindRoute(route.method, route.testPath)
+		if err != nil {
+			t.Errorf("Can not find route: %v", route.testPath)
+		}
+
+		for key, expected := range route.params {
+			val, err := param.ByName(key)
+			if err != nil {
+				t.Errorf("Can not retrieve parameter from route %v: %v", route.testPath, key)
+			} else {
+				assertStringEqual(t, expected, val)
+			}
+			val, err = param.ByName(key)
+			if err != nil {
+				t.Errorf("Can not retrieve parameter from route %v: %v", route.testPath, key)
+			} else {
+				assertStringEqual(t, expected, val)
+			}
+		}
+	}
+}
+
