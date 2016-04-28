@@ -167,6 +167,16 @@ func (ctx *Context) JSON(obj interface{}) {
 	ctx.Send(json)
 }
 
+// JSONIndent Sends a JSON response, indenting the JSON as desired.
+func (ctx *Context) JSONIndent(obj interface{}, prefix, indent string) {
+	jsonIndented, err := json.MarshalIndent(obj, prefix, indent)
+	if err != nil {
+		panic(err)
+	}
+	ctx.SetHeader("Content-Type", "application/json")
+	ctx.Send(jsonIndented)
+}
+
 // Send the response immediately. Set `ctx.IsSent` to `true` to make
 // sure that the response won't be sent twice.
 func (ctx *Context) Send(body interface{}) {
