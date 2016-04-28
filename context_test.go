@@ -385,3 +385,28 @@ func TestJSON(t *testing.T) {
 		assertEqual(t, w.HeaderMap.Get("Content-Type"), `application/json`)
 	}
 }
+
+func TestJSONIndent(t *testing.T) {
+	cases := []struct {
+		input  map[string]interface{}
+		output string
+	}{
+		{
+			map[string]interface{}{"status": "success", "code": 200},
+			`{
+  "code": 200,
+  "status": "success"
+}`,
+		},
+	}
+
+	for _, c := range cases {
+		r := makeTestHTTPRequest(nil, "GET", "/")
+		w := httptest.NewRecorder()
+		app := New()
+		ctx := NewContext(r, w, app)
+		ctx.JSONIndent(c.input, "", "  ")
+		assertEqual(t, w.Body.String(), c.output)
+		assertEqual(t, w.HeaderMap.Get("Content-Type"), `application/json`)
+	}
+}
