@@ -43,7 +43,6 @@ type Context struct {
 func NewContext(req *http.Request, res http.ResponseWriter, app *Application) *Context {
 	ctx := new(Context)
 	ctx.Request = req
-	ctx.Request.ParseForm()
 	ctx.Response = res
 	ctx.App = app
 	ctx.statusCode = 200

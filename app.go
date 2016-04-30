@@ -103,6 +103,7 @@ func (app *Application) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	ctx := app.pool.Get().(*Context)
 	ctx.reset()
 	ctx.Request = req
+	ctx.Request.ParseForm()
 	ctx.Response = res
 	ctx.App = app
 	app.handlerChain(ctx)
