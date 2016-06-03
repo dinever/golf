@@ -1,20 +1,21 @@
 package golf
 
 import (
+	"crypto/rand"
 	"encoding/hex"
-	"math/rand"
-	"time"
 )
 
 const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 func randomBytes(strlen int) []byte {
-	rand.Seed(time.Now().UTC().UnixNano())
-	result := make([]byte, strlen)
-	for i := 0; i < strlen; i++ {
-		result[i] = chars[rand.Intn(len(chars))]
+	b := make([]byte, strlen)
+	_, err := rand.Read(b)
+	if err != nil {
+		// panic on failure since this indicates a failure of the system's
+		// CSPRNG
+		panic(err)
 	}
-	return result
+	return b
 }
 
 func decodeXSRFToken(maskedToken string) ([]byte, []byte, error) {
