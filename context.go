@@ -126,9 +126,14 @@ func (ctx *Context) Param(key string) string {
 	return val
 }
 
-// Redirect method sets the response as a 301 redirection.
-// If you need a 302 redirection, please do it by setting the Header manually.
+// Redirect method sets the response as a 302 redirection.
 func (ctx *Context) Redirect(url string) {
+	ctx.SetHeader("Location", url)
+	ctx.SendStatus(302)
+}
+
+// Redirect301 method sets the response as a 301 redirection.
+func (ctx *Context) Redirect301(url string) {
 	ctx.SetHeader("Location", url)
 	ctx.SendStatus(301)
 }
