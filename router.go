@@ -90,11 +90,11 @@ func (router *router) AddRoute(method string, path string, handler HandlerFunc) 
 	rootNode.addRoute(parts, names, handler)
 
 	if path == "/" {
-	} else if path[len(path) - 1] != '/' {
+	} else if path[len(path)-1] != '/' {
 		parts, names := splitURLPath(path + "/")
 		rootNode.addRoute(parts, names, handler)
 	} else {
-		parts, names := splitURLPath(path[:len(path) - 1])
+		parts, names := splitURLPath(path[:len(path)-1])
 		rootNode.addRoute(parts, names, handler)
 	}
 	rootNode.optimizeRoutes()
