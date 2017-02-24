@@ -39,7 +39,7 @@ func (mgr *MemorySessionManager) sessionID() (string, error) {
 	b := make([]byte, sessionIDLength)
 	n, err := rand.Read(b)
 	if n != len(b) || err != nil {
-		return "", fmt.Errorf("Could not successfully read from the system CSPRNG.")
+		return "", fmt.Errorf("Could not successfully read from the system CSPRNG")
 	}
 	return hex.EncodeToString(b), nil
 }
@@ -53,7 +53,7 @@ func (mgr *MemorySessionManager) Session(sid string) (Session, error) {
 		return s, nil
 	}
 	mgr.lock.RUnlock()
-	return nil, fmt.Errorf("Can not retrieve session with id %s.", sid)
+	return nil, fmt.Errorf("Can not retrieve session with id %s", sid)
 }
 
 // NewSession creates and returns a new session.
