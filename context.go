@@ -116,7 +116,7 @@ func (ctx *Context) Query(key string, index ...int) (string, error) {
 		}
 		return val[0], nil
 	}
-	return "", errors.New("Query key not found.")
+	return "", errors.New("Query key not found")
 }
 
 // Param method retrieves the parameters from url
@@ -126,9 +126,14 @@ func (ctx *Context) Param(key string) string {
 	return val
 }
 
-// Redirect method sets the response as a 301 redirection.
-// If you need a 302 redirection, please do it by setting the Header manually.
+// Redirect method sets the response as a 302 redirection.
 func (ctx *Context) Redirect(url string) {
+	ctx.SetHeader("Location", url)
+	ctx.SendStatus(302)
+}
+
+// Redirect301 method sets the response as a 301 redirection.
+func (ctx *Context) Redirect301(url string) {
 	ctx.SetHeader("Location", url)
 	ctx.SendStatus(301)
 }
@@ -192,7 +197,7 @@ func (ctx *Context) Send(body interface{}) {
 	case *bytes.Buffer:
 		ctx.Response.Write(body.(*bytes.Buffer).Bytes())
 	default:
-		panic(fmt.Errorf("Body type not supported."))
+		panic(fmt.Errorf("Body type not supported"))
 	}
 	ctx.IsSent = true
 }
@@ -278,7 +283,7 @@ func (ctx *Context) xsrfToken() string {
 // Render a template file using the built-in Go template engine.
 func (ctx *Context) Render(file string, data ...map[string]interface{}) {
 	if ctx.templateLoader == "" {
-		panic(fmt.Errorf("Template loader has not been set."))
+		panic(fmt.Errorf("Template loader has not been set"))
 	}
 	var renderData map[string]interface{}
 	if len(data) == 0 {

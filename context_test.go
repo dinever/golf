@@ -280,6 +280,16 @@ func TestRedirection(t *testing.T) {
 	ctx := NewContext(r, w, app)
 	ctx.Redirect("/foo")
 	assertEqual(t, w.Header().Get("Location"), `/foo`)
+	assertEqual(t, w.Code, 302)
+}
+
+func TestRedirection301(t *testing.T) {
+	r := makeTestHTTPRequest(nil, "GET", "/")
+	w := httptest.NewRecorder()
+	app := New()
+	ctx := NewContext(r, w, app)
+	ctx.Redirect301("/foo")
+	assertEqual(t, w.Header().Get("Location"), `/foo`)
 	assertEqual(t, w.Code, 301)
 }
 
